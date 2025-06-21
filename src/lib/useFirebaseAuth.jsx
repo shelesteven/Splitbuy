@@ -29,7 +29,6 @@ export default function useFirebaseAuth() {
         return () => unsubscribe();
     }, []);
 
-    // ✅ Add logout function
     const signOut = async () => {
         await firebaseSignOut(auth);
         setAuthUser(null);
