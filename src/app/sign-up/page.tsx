@@ -1,106 +1,110 @@
 "use client";
 
-import { useState } from "react";
 import { FcGoogle } from "react-icons/fc"; // Google icon
 
+import { PageContainer } from "@/components/PageContainer";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+
+import { Form, FormControl, FormLabel, FormField, FormItem, FormMessage } from "@/components/ui/form";
+
+const formSchema = z.object({
+    username: z.string().min(1, "Username is required"),
+    email: z.string().email("Invalid email format").min(1, "Email is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function SignUpPage() {
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            username: "",
+            email: "",
+            password: "",
+        },
+    });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const onSubmit = (data: z.infer<typeof formSchema>) => {
+        console.log("Form submitted:", JSON.stringify(data));
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Submitted:", formData);
-  };
+    const handleGoogleSignIn = () => {
+        // Placeholder for Google sign-in logic (NextAuth, Firebase, etc.)
+        console.log("Google sign-in clicked");
+    };
 
-  const handleGoogleSignIn = () => {
-    // Placeholder for Google sign-in logic (NextAuth, Firebase, etc.)
-    console.log("Google sign-in clicked");
-  };
+    return (
+        <PageContainer className="container mx-auto items-center justify-center">
+            <Card className="w-full max-w-md bg-gray-900 border-0 p-8 shadow-xl">
+                <h1 className="text-2xl font-bold text-center">Create an Account</h1>
 
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-950 text-white px-4">
-      <div className="bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-bold text-center">Create an Account</h2>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Username</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" className="w-full">
+                            Continue
+                        </Button>
+                    </form>
+                </Form>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1" htmlFor="username">
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="bg-gray-900 px-2 text-gray-400">or</span>
+                    </div>
+                </div>
 
-          <div>
-            <label className="block text-sm mb-1" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition"
-          >
-            Sign Up
-          </button>
-        </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-gray-900 px-2 text-gray-400">or</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition"
-        >
-          <FcGoogle size={20} />
-          Continue with Google
-        </button>
-      </div>
-    </div>
-  );
+                <Button onClick={handleGoogleSignIn}>
+                    <FcGoogle size={20} />
+                    Sign Up with Google
+                </Button>
+            </Card>
+        </PageContainer>
+    );
 }
