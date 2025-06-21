@@ -10,6 +10,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { toast } from "sonner";
+
 const formSchema = z.object({
     email: z.string().email(),
 });
@@ -23,7 +25,7 @@ export default function Home() {
     });
 
     return (
-        <section className="flex grow items-center justify-center bg-gradient-to-br from-indigo-200 to-white dark:from-indigo-950/50 dark:to-gray-950 px-6 py-16 overflow-hidden">
+        <section className="flex grow items-center justify-center bg-gradient-to-br from-indigo-200 to-white dark:from-indigo-950/40 dark:to-gray-950 px-6 py-16 overflow-hidden">
             <div className="mx-auto flex flex-col items-center justify-between z-10">
                 <div className="text-center max-w-2xl">
                     <h1 className="text-5xl md:text-6xl font-extrabold text-indigo-500 dark:text-indigo-400 leading-tight mb-2">Group up. Save big.</h1>
@@ -32,7 +34,7 @@ export default function Home() {
 
                 <Card className="w-full max-w-md bg-background/80 p-8 shadow-xl">
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit((data) => console.log(data))} className="space-y-6">
+                        <form onSubmit={form.handleSubmit((data) => toast.success(JSON.stringify(data)))} className="space-y-6">
                             <FormField
                                 control={form.control}
                                 name="email"

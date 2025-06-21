@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
     title: "Splitbuy | Save More Together",
@@ -13,9 +14,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className="min-h-screen flex flex-col font-sans antialiased">
+            <body className="min-h-screen flex flex-col font-sans antialiased overflow-y-scroll">
                 <ThemeProvider attribute="class" enableSystem>
-                    <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-900 shadow-xl">
+                    <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-800 shadow-xl">
                         <nav className="container mx-auto flex items-center justify-between px-4 py-4">
                             <Link href="/" className="text-2xl font-bold tracking-tight">
                                 Splitbuy
@@ -33,6 +34,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     </header>
 
                     <main className="grow flex flex-col h-full overflow-auto">{children}</main>
+
+                    <Toaster theme="system" />
                 </ThemeProvider>
             </body>
         </html>
