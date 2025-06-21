@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col font-sans antialiased overflow-y-scroll bg-white">
         <AuthUserProvider>
-          <ThemeProvider attribute="class" forcedTheme="dark" enableSystem>
+          <ThemeProvider attribute="class" forcedTheme="light" enableSystem>
             <SiteHeader />
             <main className="grow flex flex-col h-full overflow-auto">
               {children}
