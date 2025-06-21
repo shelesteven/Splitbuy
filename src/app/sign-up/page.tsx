@@ -35,60 +35,60 @@ export default function SignUpPage() {
         },
     });
 
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const router = useRouter();
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const router = useRouter();
 
-  const saveUserToFirestore = async (user: any, name: string) => {
-    const userRef = doc(db, "users", user.uid);
-    await setDoc(userRef, {
-      uid: user.uid,
-      name: name,
-      email: user.email,
-      createdAt: new Date().toISOString(),
-    });
-  };
+    const saveUserToFirestore = async (user: any, name: string) => {
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, {
+            uid: user.uid,
+            name: name,
+            email: user.email,
+            createdAt: new Date().toISOString(),
+        });
+    };
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const { username, email, password } = data;
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        const { username, email, password } = data;
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-      await saveUserToFirestore(user, username);
+            await saveUserToFirestore(user, username);
 
-      console.log("Email sign-up successful:", user.email);
-      router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Email Sign-Up Error:", error);
-      alert("Sign-up failed: " + error.message);
-    }
-  };
+            console.log("Email sign-up successful:", user.email);
+            router.push("/dashboard");
+        } catch (error: any) {
+            console.error("Email Sign-Up Error:", error);
+            alert("Sign-up failed: " + error.message);
+        }
+    };
 
-  const handleGoogleSignIn = async () => {
-    if (googleLoading) return;
-    setGoogleLoading(true);
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+    const handleGoogleSignIn = async () => {
+        if (googleLoading) return;
+        setGoogleLoading(true);
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
 
-      await saveUserToFirestore(user, user.displayName || "No Name");
+            await saveUserToFirestore(user, user.displayName || "No Name");
 
-      console.log("Google sign-in successful:", user.email);
-      router.push("/dashboard");
-    } catch (error: any) {
-      if (error.code !== "auth/cancelled-popup-request") {
-        console.error("Google Sign-In Error:", error);
-        alert("Google Sign-In failed. See console for details.");
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
+            console.log("Google sign-in successful:", user.email);
+            router.push("/dashboard");
+        } catch (error: any) {
+            if (error.code !== "auth/cancelled-popup-request") {
+                console.error("Google Sign-In Error:", error);
+                alert("Google Sign-In failed. See console for details.");
+            }
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
 
     return (
         <PageContainer className="container mx-auto items-center justify-center">
-            <Card className="w-full max-w-md bg-gray-900 border-0 p-8 shadow-xl">
+            <Card className="w-full max-w-md bg-gray-100 dark:bg-gray-900 border-0 p-8 shadow-xl">
                 <h1 className="text-2xl font-bold text-center">Create an Account</h1>
 
                 <Form {...form}>
