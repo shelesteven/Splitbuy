@@ -7,11 +7,15 @@ const firebaseCredentials = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 };
 
-Object.keys(firebaseCredentials).forEach((key) => {
-    const configValue = firebaseCredentials[key] + "";
-    if (configValue.charAt(0) === '"') {
-        firebaseCredentials[key] = configValue.substring(1, configValue.length - 1);
+const sanitizeEnvValue = (value) => {
+    if (typeof value === "string" && value.startsWith('"') && value.endsWith('"')) {
+        return value.slice(1, -1);
     }
+    return value;
+};
+
+Object.keys(firebaseCredentials).forEach((key) => {
+    firebaseCredentials[key] = sanitizeEnvValue(firebaseCredentials[key]);
 });
 
 export const firebaseConfig = firebaseCredentials;
