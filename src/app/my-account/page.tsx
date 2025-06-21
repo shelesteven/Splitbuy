@@ -8,6 +8,17 @@ import { doc, getDoc } from 'firebase/firestore';
 interface UserProfile {
   name: string;
   email: string;
+  cardLast4?: string;
+  cardBrand?: string;
+  billingName?: string;
+  billingEmail?: string;
+  billingAddress?: {
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    postal_code: string;
+  };
 }
 
 export default function MyProfilePage() {
@@ -50,6 +61,7 @@ export default function MyProfilePage() {
   return (
     <div className="max-w-xl mx-auto mt-20 px-6 py-10 bg-white shadow-xl rounded-2xl border border-gray-200">
       <h1 className="text-3xl font-bold text-center mb-8">My Profile</h1>
+
       <div className="space-y-6">
         <div>
           <h2 className="text-sm uppercase tracking-wide text-gray-500 font-semibold">Username</h2>
@@ -60,6 +72,74 @@ export default function MyProfilePage() {
           <p className="text-xl font-medium text-gray-800">{profile.email}</p>
         </div>
       </div>
+
+      {/* Credit Card Section */}
+      <div className="mt-10 border-t pt-6">
+        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+          💳 Credit Card
+        </h2>
+
+        {profile.cardLast4 && profile.cardBrand ? (
+          <div className="bg-gray-50 p-4 rounded-lg border flex items-center gap-4">
+            <div className="text-4xl">
+              {getCardBrandEmoji(profile.cardBrand)}
+            </div>
+            <div>
+              <p className="text-lg font-medium text-gray-800">
+                {capitalize(profile.cardBrand)} •••• {profile.cardLast4}
+              </p>
+              {profile.billingName && (
+                <p className="text-sm text-gray-600">Name: {profile.billingName}</p>
+              )}
+              {profile.billingEmail && (
+                <p className="text-sm text-gray-600">Email: {profile.billingEmail}</p>
+              )}
+              {profile.billingAddress && (
+                <div className="mt-2 text-sm text-gray-600">
+                  <p>Address:</p>
+                  <p>{profile.billingAddress.line1}</p>
+                  {profile.billingAddress.line2 && <p>{profile.billingAddress.line2}</p>}
+                  <p>
+                    {profile.billingAddress.city}, {profile.billingAddress.state}{' '}
+                    {profile.billingAddress.postal_code}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">No card info available.</p>
+            <a
+              href="/credit-card"
+              className="inline-block bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+            >
+              Set up payment card
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+// Helper: Emoji for card brand
+function getCardBrandEmoji(brand: string) {
+  switch (brand.toLowerCase()) {
+    case 'visa':
+      return '💳';
+    case 'mastercard':
+      return '💳';
+    case 'amex':
+      return '💠';
+    case 'discover':
+      return '🌐';
+    default:
+      return '💳';
+  }
+}
+
+// Helper: Capitalize text
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
