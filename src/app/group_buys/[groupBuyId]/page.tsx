@@ -23,6 +23,7 @@ export default function GroupBuyPage() {
   const { authUser } = useAuth();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [product, setProduct] = useState<any>(null);
+  const [hasPermission, setHasPermission] = useState(true);
   const groupBuyId = Array.isArray(params.groupBuyId) ? params.groupBuyId[0] : params.groupBuyId;
 
   useEffect(() => {
@@ -37,63 +38,79 @@ export default function GroupBuyPage() {
     if (!authUser || !groupBuyId) return;
 
     const setupChatAndParticipants = async () => {
-      const chatRef = doc(db, "chats", groupBuyId);
-      const chatSnap = await getDoc(chatRef);
-
-      if (chatSnap.exists()) {
-        const chatData = chatSnap.data();
-        const userIds = chatData.users || [];
-        const userPromises = userIds.map((uid: string) => getDoc(doc(db, "users", uid)));
-        const userDocs = await Promise.all(userPromises);
-        const fetchedParticipants = userDocs.map(userDoc => {
-          const userData = userDoc.data();
-          return {
-            id: userDoc.id,
-            name: userData?.name || "Anonymous",
-            status: "confirmed",
-          } as Participant;
-        });
-        setParticipants(fetchedParticipants);
-      } else {
-        const userDocRef = doc(db, "users", authUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        const currentUserName = userDocSnap.data()?.name || authUser.email || "Current User";
-
-        const usersRef = collection(db, "users");
-        const usersSnap = await getDocs(usersRef);
-        const allUsers = usersSnap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(user => user.id !== authUser.uid);
+      try {
+        const chatRef = doc(db, "chats", groupBuyId);
+        const chatSnap = await getDoc(chatRef);
   
-        const randomUsers = allUsers.sort(() => 0.5 - Math.random()).slice(0, 2);
-        
-        const currentUserInfo = { id: authUser.uid, name: currentUserName, status: "confirmed" as const };
-        
-        const newParticipants = [
-          currentUserInfo,
-          ...randomUsers.map(user => ({ id: user.id, name: (user as any).name || "Anonymous", status: "confirmed" as const}))
-        ];
-        
-        setParticipants(newParticipants);
+        if (chatSnap.exists()) {
+          const chatData = chatSnap.data();
+          const userIds = chatData.users || [];
+          // Simple permission check: if authUser is not in the list, they can't see it.
+          if (!userIds.includes(authUser.uid)) {
+            setHasPermission(false);
+            return;
+          }
+          setHasPermission(true);
+          const userPromises = userIds.map((uid: string) => getDoc(doc(db, "users", uid)));
+          const userDocs = await Promise.all(userPromises);
+          const fetchedParticipants = userDocs.map(userDoc => {
+            const userData = userDoc.data();
+            return {
+              id: userDoc.id,
+              name: userData?.name || "Anonymous",
+              status: "confirmed",
+            } as Participant;
+          });
+          setParticipants(fetchedParticipants);
+        } else {
+          // If the chat doesn't exist, we assume the user can create one
+          setHasPermission(true);
+          const userDocRef = doc(db, "users", authUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+          const currentUserName = userDocSnap.data()?.name || authUser.email || "Current User";
   
-        const participantIds = newParticipants.map(p => p.id);
-  
-        await setDoc(chatRef, {
-          users: participantIds,
-          createdAt: serverTimestamp(),
-          messages: [
-            {
-              senderId: randomUsers[0]?.id || 'system',
-              text: `Hey everyone, what do you think of this ${product?.name}?`,
-              timestamp: Timestamp.now(),
-            },
-            {
-              senderId: authUser.uid,
-              text: "I think it's a great deal!",
-              timestamp: Timestamp.now(),
-            },
-          ],
-        });
+          const usersRef = collection(db, "users");
+          const usersSnap = await getDocs(usersRef);
+          const allUsers = usersSnap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(user => user.id !== authUser.uid);
+    
+          const randomUsers = allUsers.sort(() => 0.5 - Math.random()).slice(0, 2);
+          
+          const currentUserInfo = { id: authUser.uid, name: currentUserName, status: "confirmed" as const };
+          
+          const newParticipants = [
+            currentUserInfo,
+            ...randomUsers.map(user => ({ id: user.id, name: (user as any).name || "Anonymous", status: "confirmed" as const}))
+          ];
+          
+          setParticipants(newParticipants);
+    
+          const participantIds = newParticipants.map(p => p.id);
+    
+          await setDoc(chatRef, {
+            users: participantIds,
+            createdAt: serverTimestamp(),
+            messages: [
+              {
+                senderId: randomUsers[0]?.id || 'system',
+                text: `Hey everyone, what do you think of this ${product?.name}?`,
+                timestamp: Timestamp.now(),
+              },
+              {
+                senderId: authUser.uid,
+                text: "I think it's a great deal!",
+                timestamp: Timestamp.now(),
+              },
+            ],
+          });
+        }
+      } catch (error: any) {
+        if (error.code === 'permission-denied') {
+          setHasPermission(false);
+        } else {
+          console.error("Error setting up chat and participants:", error);
+        }
       }
     };
 
@@ -127,7 +144,9 @@ export default function GroupBuyPage() {
                 <span className="text-xl font-bold text-green-500">{product.discountedPrice}</span>
                 <span className="text-lg text-muted-foreground line-through">{product.price}</span>
             </div>
-            <Button size="lg" className="w-fit">Buy</Button>
+            <Button size="lg" className="w-fit">
+              {hasPermission ? 'Buy' : 'Request to Join'}
+            </Button>
           </div>
         </div>
 
@@ -137,27 +156,33 @@ export default function GroupBuyPage() {
               <CardTitle className="text-lg">Participants</CardTitle>
             </CardHeader>
             <CardContent className="py-1">
-              <ul className="space-y-1">
-                {participants.map((participant) => (
-                  <li
-                    key={participant.id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      {participant.status === "confirmed" ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className="font-medium">{participant.name}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {hasPermission ? (
+                <ul className="space-y-1">
+                  {participants.map((participant) => (
+                    <li
+                      key={participant.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        {participant.status === "confirmed" ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className="font-medium">{participant.name}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  You do not have permission to view the participants.
+                </p>
+              )}
             </CardContent>
           </Card>
           <div className="flex-grow min-h-0">
-            {groupBuyId && <ChatBox chatId={groupBuyId} />}
+            {hasPermission && groupBuyId && <ChatBox chatId={groupBuyId} />}
           </div>
         </div>
       </div>
