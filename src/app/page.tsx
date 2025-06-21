@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormLabel, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
 import { PageContainer } from "@/components/PageContainer";
 
@@ -42,8 +42,9 @@ export default function Home() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
+                                        <FormLabel className="text-white">Email</FormLabel>
                                         <FormControl>
-                                            <Input type="email" placeholder="you@example.com" {...field} />
+                                            <Input type="email" placeholder="" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
