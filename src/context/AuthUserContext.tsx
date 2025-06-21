@@ -11,11 +11,14 @@ interface AuthUser {
 interface AuthContextType {
     authUser: AuthUser | null;
     loading: boolean;
+    signOut: () => Promise<void>;
 }
 
+// Add signOut to context type
 const authUserContext = createContext<AuthContextType>({
     authUser: null,
     loading: true,
+    signOut: async () => {},
 });
 
 export function AuthUserProvider({ children }: { children: ReactNode }) {
