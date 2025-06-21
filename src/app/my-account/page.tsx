@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthUserContext';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthUserContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 import { Card } from '@/components/ui/card';
 import { PageContainer } from '@/components/PageContainer';
@@ -22,7 +22,7 @@ export default function MyProfilePage() {
     const fetchProfile = async () => {
       if (!authUser?.uid) return;
 
-      const docRef = doc(db, 'users', authUser.uid);
+      const docRef = doc(db, "users", authUser.uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -45,7 +45,9 @@ export default function MyProfilePage() {
   if (!authUser || !profile) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-lg text-red-500">Unable to load profile. Please sign in.</p>
+        <p className="text-lg text-red-500">
+          Unable to load profile. Please sign in.
+        </p>
       </div>
     );
   }
