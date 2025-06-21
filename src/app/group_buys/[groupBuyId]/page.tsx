@@ -107,7 +107,7 @@ export default function GroupBuyPage() {
   }
   
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 lg:h-[calc(100vh-100px)]">
+    <div className="px-16 py-4 md:py-6 lg:py-8 lg:h-[calc(100vh-100px)]">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:h-full">
         <div className="lg:col-span-2 lg:h-full flex flex-col gap-y-4">
           <div className="relative w-full aspect-video lg:h-3/5 lg:aspect-auto">

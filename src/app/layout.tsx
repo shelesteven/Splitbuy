@@ -35,7 +35,7 @@ function SiteHeader() {
 
     return (
         <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-800 shadow-xl">
-            <nav className="container mx-auto flex items-center justify-between px-4 py-4">
+            <nav className="px-16 py-4 flex items-center justify-between">
                 <Link href="/" className="text-2xl font-bold tracking-tight">
                     Splitbuy
                 </Link>
