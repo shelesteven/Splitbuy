@@ -10,10 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormLabel, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
 const formSchema = z.object({
-    email: z.string().email(),
+    user: z
+        .string()
+        .min(1, "Username or email is required")
+        .email("Invalid email format")
+        .or(z.string().regex(/^[a-zA-Z0-9_]+$/, "Invalid username format")),
     password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -21,7 +25,7 @@ export default function Page() {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
+            user: "",
             password: "",
         },
     });
@@ -32,17 +36,18 @@ export default function Page() {
 
     return (
         <PageContainer className="container mx-auto items-center justify-center">
-            <h1 className="text-4xl md:text-6xl font-bold">Sign In</h1>
-            <Card className="w-full max-w-md bg-background/80 p-8 shadow-xl">
+            <Card className="w-full max-w-md bg-gray-900 border-0 p-8 shadow-xl">
+                <h1 className="w-full text-center text-2xl font-bold">Sign In</h1>
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                         <FormField
                             control={form.control}
-                            name="email"
+                            name="user"
                             render={({ field }) => (
                                 <FormItem>
+                                    <FormLabel>Username or Email</FormLabel>
                                     <FormControl>
-                                        <Input type="email" placeholder="you@example.com" {...field} />
+                                        <Input type="user" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -53,8 +58,9 @@ export default function Page() {
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
+                                    <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input type="password" placeholder="password" {...field} />
+                                        <Input type="password" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

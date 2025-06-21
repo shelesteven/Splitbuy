@@ -1,26 +1,42 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, provider, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
+import { PageContainer } from "@/components/PageContainer";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+
+import { Form, FormControl, FormLabel, FormField, FormItem, FormMessage } from "@/components/ui/form";
+
+const formSchema = z.object({
+    username: z.string().min(1, "Username is required"),
+    email: z.string().email("Invalid email format").min(1, "Email is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export default function SignUpPage() {
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            username: "",
+            email: "",
+            password: "",
+        },
+    });
 
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
   const saveUserToFirestore = async (user: any, name: string) => {
     const userRef = doc(db, "users", user.uid);
@@ -32,9 +48,8 @@ export default function SignUpPage() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { username, email, password } = formData;
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    const { username, email, password } = data;
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -71,87 +86,72 @@ export default function SignUpPage() {
     }
   };
 
-  return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-950 text-white px-4">
-      <div className="bg-gray-900 p-8 rounded-xl shadow-lg w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-bold text-center">Create an Account</h2>
+    return (
+        <PageContainer className="container mx-auto items-center justify-center">
+            <Card className="w-full max-w-md bg-gray-900 border-0 p-8 shadow-xl">
+                <h1 className="text-2xl font-bold text-center">Create an Account</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1" htmlFor="username">
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Username</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                        <Input type="email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="password"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Password</FormLabel>
+                                    <FormControl>
+                                        <Input type="password" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" className="w-full">
+                            Continue
+                        </Button>
+                    </form>
+                </Form>
 
-          <div>
-            <label className="block text-sm mb-1" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-700"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                        <span className="bg-gray-900 px-2 text-gray-400">or</span>
+                    </div>
+                </div>
 
-          <div>
-            <label className="block text-sm mb-1" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold transition"
-          >
-            Sign Up
-          </button>
-        </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-gray-900 px-2 text-gray-400">or</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-          className={`w-full flex items-center justify-center gap-3 py-2 rounded-lg transition ${
-            googleLoading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-white text-black hover:bg-gray-200"
-          }`}
-        >
-          <FcGoogle size={20} />
-          {googleLoading ? "Signing in..." : "Continue with Google"}
-        </button>
-      </div>
-    </div>
-  );
+                <Button onClick={handleGoogleSignIn} disabled={googleLoading}>
+                    <FcGoogle size={20} />
+                    Sign up with Google
+                </Button>
+            </Card>
+        </PageContainer>
+    );
 }
