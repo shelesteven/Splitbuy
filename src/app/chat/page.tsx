@@ -1,20 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthUserContext";
 import { PageContainer } from "@/components/PageContainer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { ChatList } from "@/components/chat/ChatList";
+import { ChatBox } from "@/components/chat/ChatBox";
+import { useAuth } from "@/context/AuthUserContext";
+import { useRouter } from "next/navigation";
 
 export default function ChatPage() {
+    const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
     const { authUser, loading } = useAuth();
     const router = useRouter();
-    const [chats, setChats] = useState<any[]>([]);
-    const [newChatUserEmail, setNewChatUserEmail] = useState("");
 
     useEffect(() => {
         if (!loading && !authUser) {
@@ -22,53 +18,31 @@ export default function ChatPage() {
         }
     }, [authUser, loading, router]);
 
-    useEffect(() => {
-        if (authUser) {
-            const q = query(collection(db, "chats"), where("users", "array-contains", authUser.uid));
-            getDocs(q).then((querySnapshot) => {
-                const chatsData = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-                setChats(chatsData);
-            });
-        }
-    }, [authUser]);
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
-    const createNewChat = async () => {
-        if (!authUser) return;
-
-        const q = query(collection(db, "users"), where("email", "==", newChatUserEmail));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.docs[0] === undefined) {
-            alert("User not found");
-            return;
-        }
-
-        const userToChatWithId = querySnapshot.docs[0].id;
-
-        const chatRef = await addDoc(collection(db, "chats"), {
-            users: [authUser.uid, userToChatWithId],
-            messages: [],
-        });
-
-        router.push(`/chat/${chatRef.id}`);
-    };
+    if (!authUser) {
+        router.push("/sign-in");
+        return null;
+    }
 
     return (
         <PageContainer>
-            <Card className="w-full max-w-md mx-auto mt-10 p-6">
-                <h1 className="text-2xl font-bold mb-4">Chats</h1>
-                <div className="flex gap-2 mb-4">
-                    <Input type="email" placeholder="Enter user email to chat" value={newChatUserEmail} onChange={(e) => setNewChatUserEmail(e.target.value)} />
-                    <Button onClick={createNewChat}>New Chat</Button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-200px)]">
+                <div className="md:col-span-1">
+                    <ChatList onSelectChat={setSelectedChatId} />
                 </div>
-                <div>
-                    {chats.map((chat) => (
-                        <div key={chat.id} onClick={() => router.push(`/chat/${chat.id}`)} className="p-2 border-b cursor-pointer">
-                            <p>Chat with {chat.id}</p>
+                <div className="md:col-span-2">
+                    {selectedChatId ? (
+                        <ChatBox chatId={selectedChatId} />
+                    ) : (
+                        <div className="flex items-center justify-center h-full bg-gray-100 rounded-lg">
+                            <p className="text-gray-500">Select a chat to start messaging</p>
                         </div>
-                    ))}
+                    )}
                 </div>
-            </Card>
+            </div>
         </PageContainer>
     );
 }
