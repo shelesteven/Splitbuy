@@ -83,25 +83,23 @@ export function ChatList({ onSelectChat }: ChatListProps) {
         if (!authUser) return;
 
         // Filter out empty emails and validate
-        const validEmails = newChatUserEmails.filter(email => email.trim() !== "");
+        const validEmails = newChatUserEmails.filter((email) => email.trim() !== "");
         if (validEmails.length === 0) {
             alert("Please enter at least one email address.");
             return;
         }
 
         // Check if user is trying to invite themselves
-        if (authUser.email && validEmails.some(email => email.toLowerCase() === authUser.email?.toLowerCase())) {
+        if (authUser.email && validEmails.some((email) => email.toLowerCase() === authUser.email?.toLowerCase())) {
             alert("You cannot invite yourself to a chat.");
             return;
         }
 
         try {
             // Find all users by email
-            const userQueries = validEmails.map(email => 
-                query(collection(db, "users"), where("email", "==", email))
-            );
-            
-            const queryResults = await Promise.all(userQueries.map(q => getDocs(q)));
+            const userQueries = validEmails.map((email) => query(collection(db, "users"), where("email", "==", email)));
+
+            const queryResults = await Promise.all(userQueries.map((q) => getDocs(q)));
             const foundUsers: string[] = [];
             const notFoundEmails: string[] = [];
 
@@ -122,8 +120,8 @@ export function ChatList({ onSelectChat }: ChatListProps) {
             const allUsers = [authUser.uid, ...foundUsers].sort();
             const existingChatQuery = query(collection(db, "chats"), where("users", "array-contains", authUser.uid));
             const existingChatSnapshot = await getDocs(existingChatQuery);
-            
-            const existingChat = existingChatSnapshot.docs.find(doc => {
+
+            const existingChat = existingChatSnapshot.docs.find((doc) => {
                 const chatUsers = [...doc.data().users].sort();
                 return JSON.stringify(chatUsers) === JSON.stringify(allUsers);
             });
@@ -156,18 +154,9 @@ export function ChatList({ onSelectChat }: ChatListProps) {
                 <div className="mt-4 space-y-2">
                     {newChatUserEmails.map((email, index) => (
                         <div key={index} className="flex gap-2">
-                            <Input 
-                                type="email" 
-                                placeholder={`Enter user email ${index + 1}`}
-                                value={email} 
-                                onChange={(e) => updateEmailInput(index, e.target.value)} 
-                            />
+                            <Input type="email" placeholder={`Enter user email ${index + 1}`} value={email} onChange={(e) => updateEmailInput(index, e.target.value)} />
                             {newChatUserEmails.length > 1 && (
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => removeEmailInput(index)}
-                                    className="px-3"
-                                >
+                                <Button variant="outline" onClick={() => removeEmailInput(index)} className="px-3">
                                     ×
                                 </Button>
                             )}
@@ -189,9 +178,11 @@ export function ChatList({ onSelectChat }: ChatListProps) {
                     const otherUserNames = otherUserIds.map((uid: string) => users[uid] || "Loading...").join(", ");
                     const displayName = otherUserNames || "Group Chat";
                     return (
-                        <div key={chat.id} onClick={() => onSelectChat(chat.id)} className="p-2 border-b cursor-pointer hover:bg-gray-100">
+                        <div key={chat.id} onClick={() => onSelectChat(chat.id)} className="p-2 border-b cursor-pointer">
                             <p className="font-semibold">{displayName}</p>
-                            <p className="text-sm text-gray-500">{chat.users.length} member{chat.users.length !== 1 ? 's' : ''}</p>
+                            <p className="text-sm text-gray-500">
+                                {chat.users.length} member{chat.users.length !== 1 ? "s" : ""}
+                            </p>
                         </div>
                     );
                 })}

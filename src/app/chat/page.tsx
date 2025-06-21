@@ -6,6 +6,7 @@ import { ChatList } from "@/components/chat/ChatList";
 import { ChatBox } from "@/components/chat/ChatBox";
 import { useAuth } from "@/context/AuthUserContext";
 import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
 
 export default function ChatPage() {
     const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -37,9 +38,9 @@ export default function ChatPage() {
                     {selectedChatId ? (
                         <ChatBox chatId={selectedChatId} />
                     ) : (
-                        <div className="flex items-center justify-center h-full bg-gray-100 rounded-lg">
+                        <Card className="flex items-center justify-center h-full rounded-lg">
                             <p className="text-gray-500">Select a chat to start messaging</p>
-                        </div>
+                        </Card>
                     )}
                 </div>
             </div>
