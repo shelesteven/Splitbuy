@@ -87,7 +87,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
 
     return (
         <Card className="w-full h-full flex flex-col">
-            <div className="p-4 border-b">
+            <div className="px-4 pb-4 border-b">
                 <h2 className="text-xl font-bold">Chat</h2>
                 {chat.users && <div className="text-sm text-gray-600 mt-1">Participants: {chat.users.map((uid: string) => users[uid] || "Loading...").join(", ")}</div>}
             </div>
@@ -102,7 +102,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
                 ))}
                 <div ref={messagesEndRef} />
             </div>
-            <div className="p-4 border-t">
+            <div className="px-4 pt-4 border-t">
                 <div className="flex gap-2">
                     <Input type="text" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} />
                     <Button onClick={handleSendMessage}>Send</Button>

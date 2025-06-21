@@ -107,50 +107,47 @@ export default function GroupBuyPage() {
   }
   
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    width={400}
-                    height={400}
-                    className="rounded-lg object-cover w-full aspect-square"
-                  />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-                  <p className="text-muted-foreground mb-4">
-                    {product.description}
-                  </p>
-                  <Button size="lg">Buy</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    <div className="container mx-auto p-4 md:p-6 lg:p-8 lg:h-[calc(100vh-100px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:h-full">
+        <div className="lg:col-span-2 lg:h-full flex flex-col gap-y-4">
+          <div className="relative w-full aspect-video lg:h-3/5 lg:aspect-auto">
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              layout="fill"
+              className="rounded-lg object-cover"
+            />
+          </div>
+          <div className="flex-grow px-2 flex flex-col justify-start">
+            <h1 className="text-2xl font-bold mb-1">{product.name}</h1>
+            <p className="text-muted-foreground mb-2 text-sm">
+              {product.description}
+            </p>
+            <div className="flex items-center gap-3 mb-3">
+                <span className="text-xl font-bold text-green-500">{product.discountedPrice}</span>
+                <span className="text-lg text-muted-foreground line-through">{product.price}</span>
+            </div>
+            <Button size="lg" className="w-fit">Buy</Button>
+          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="lg:col-span-1 flex flex-col gap-y-4 lg:h-full">
           <Card>
-            <CardHeader>
-              <CardTitle>Participants</CardTitle>
+            <CardHeader className="py-2">
+              <CardTitle className="text-lg">Participants</CardTitle>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
+            <CardContent className="py-1">
+              <ul className="space-y-1">
                 {participants.map((participant) => (
                   <li
                     key={participant.id}
-                    className="flex items-center justify-between"
+                    className="flex items-center justify-between text-sm"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {participant.status === "confirmed" ? (
-                        <CheckCircle className="h-6 w-6 text-green-500" />
+                        <CheckCircle className="h-4 w-4 text-green-500" />
                       ) : (
-                        <XCircle className="h-6 w-6 text-red-500" />
+                        <XCircle className="h-4 w-4 text-red-500" />
                       )}
                       <span className="font-medium">{participant.name}</span>
                     </div>
@@ -159,7 +156,9 @@ export default function GroupBuyPage() {
               </ul>
             </CardContent>
           </Card>
-          {groupBuyId && <ChatBox chatId={groupBuyId} />}
+          <div className="flex-grow min-h-0">
+            {groupBuyId && <ChatBox chatId={groupBuyId} />}
+          </div>
         </div>
       </div>
     </div>

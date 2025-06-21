@@ -705,7 +705,7 @@ export default function DashboardPage() {
             </Button>{" "}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <Link href={`/group_buys/${product.id}`} key={product.id}>
                 <Card
@@ -724,9 +724,14 @@ export default function DashboardPage() {
                       {product.description}
                     </p>
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-green-600">
-                        {product.price}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-green-600">
+                          {product.discountedPrice}
+                        </span>
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400 line-through">
+                          {product.price}
+                        </span>
+                      </div>
                       <span className="text-xs text-neutral-500 dark:text-neutral-400">
                         {product.distance.toFixed(1)} km away
                       </span>
