@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { FcGoogle } from "react-icons/fc"; // Google icon
+import { useRouter } from "next/navigation";
+import { FcGoogle } from "react-icons/fc";
+import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, provider, db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -10,19 +14,61 @@ export default function SignUpPage() {
     password: "",
   });
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const router = useRouter();
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Submitted:", formData);
+  const saveUserToFirestore = async (user: any, name: string) => {
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(userRef, {
+      uid: user.uid,
+      name: name,
+      email: user.email,
+      createdAt: new Date().toISOString(),
+    });
   };
 
-  const handleGoogleSignIn = () => {
-    // Placeholder for Google sign-in logic (NextAuth, Firebase, etc.)
-    console.log("Google sign-in clicked");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { username, email, password } = formData;
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await saveUserToFirestore(user, username);
+
+      console.log("Email sign-up successful:", user.email);
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("Email Sign-Up Error:", error);
+      alert("Sign-up failed: " + error.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      await saveUserToFirestore(user, user.displayName || "No Name");
+
+      console.log("Google sign-in successful:", user.email);
+      router.push("/dashboard");
+    } catch (error: any) {
+      if (error.code !== "auth/cancelled-popup-request") {
+        console.error("Google Sign-In Error:", error);
+        alert("Google Sign-In failed. See console for details.");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -86,7 +132,7 @@ export default function SignUpPage() {
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
+            <div className="w-full border-t border-gray-700" />
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="bg-gray-900 px-2 text-gray-400">or</span>
@@ -95,10 +141,15 @@ export default function SignUpPage() {
 
         <button
           onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 py-2 bg-white text-black rounded-lg hover:bg-gray-200 transition"
+          disabled={googleLoading}
+          className={`w-full flex items-center justify-center gap-3 py-2 rounded-lg transition ${
+            googleLoading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-white text-black hover:bg-gray-200"
+          }`}
         >
           <FcGoogle size={20} />
-          Continue with Google
+          {googleLoading ? "Signing in..." : "Continue with Google"}
         </button>
       </div>
     </div>
