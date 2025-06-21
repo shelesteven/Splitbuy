@@ -22,6 +22,8 @@ import { toast } from "sonner";
 
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { useAuth } from "@/context/AuthUserContext";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -30,6 +32,8 @@ const formSchema = z.object({
 export default function Home() {
   const router = useRouter();
 
+  const { authUser } = useAuth();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -37,11 +41,17 @@ export default function Home() {
     },
   });
 
+  useEffect(() => {
+    if (authUser) {
+      router.replace("/dashboard");
+    }
+  }, [authUser]);
+
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       const q = query(
         collection(db, "users"),
-        where("email", "==", data.email.toLowerCase())
+        where("email", "==", data.email.toLowerCase()),
       );
       const snapshot = await getDocs(q);
 

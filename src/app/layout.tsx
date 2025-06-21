@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UserCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
@@ -42,9 +43,12 @@ function SiteHeader() {
                 {!loading &&
                     (authUser ? (
                         <div className="relative">
-                            <Button variant="outline" onClick={() => setOpen(!open)}>
-                                {authUser.email}
-                            </Button>
+                            <button
+              onClick={() => setOpen(!open)}
+              className="cursor-pointer rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+            >
+                                <UserCircle className="w-6 h-6" />
+                            </button>
 
                             {open && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
