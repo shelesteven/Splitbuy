@@ -1,19 +1,33 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import useFirebaseAuth from "../lib/useFirebaseAuth";
 
+interface AuthUser {
+    uid: string;
+    email: string | null;
+}
+
+interface AuthContextType {
+    authUser: AuthUser | null;
+    loading: boolean;
+    signOut: () => Promise<void>;
+}
+
 // Add signOut to context type
-const authUserContext = createContext({
-  authUser: null,
-  loading: true,
-  signOut: () => {},
+// Add signOut to context type
+const authUserContext = createContext<AuthContextType>({
+    authUser: null,
+    loading: true,
+    signOut: async () => {
+        const auth = useFirebaseAuth();
+        await auth.signOut();
+    },
 });
 
-export function AuthUserProvider({ children }: { children: React.ReactNode }) {
-  const auth = useFirebaseAuth();
-  return <authUserContext.Provider value={auth}>{children}</authUserContext.Provider>;
+export function AuthUserProvider({ children }: { children: ReactNode }) {
+    const auth = useFirebaseAuth();
+    return <authUserContext.Provider value={auth}>{children}</authUserContext.Provider>;
 }
 
 export const useAuth = () => useContext(authUserContext);
-
