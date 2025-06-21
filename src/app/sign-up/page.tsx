@@ -140,10 +140,10 @@ export default function SignUpPage() {
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-700"></div>
+                        <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="bg-gray-900 px-2 text-gray-400">or</span>
+                        <span className="bg-gray-100 dark:bg-gray-900 px-2 text-gray-400">or</span>
                     </div>
                 </div>
 

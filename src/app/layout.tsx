@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <html lang="en" suppressHydrationWarning>
             <body className="min-h-screen flex flex-col font-sans antialiased overflow-y-scroll">
                 <AuthUserProvider>
-                    <ThemeProvider attribute="class" enableSystem>
+                    <ThemeProvider attribute="class" forcedTheme="light" enableSystem>
                         <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-800 shadow-xl">
                             <nav className="container mx-auto flex items-center justify-between px-4 py-4">
                                 <Link href="/" className="text-2xl font-bold tracking-tight">

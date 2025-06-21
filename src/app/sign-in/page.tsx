@@ -85,7 +85,7 @@ export default function Page() {
     return (
         <PageContainer className="container mx-auto items-center justify-center">
             <Card className="w-full max-w-md bg-gray-100 dark:bg-gray-900 border-0 p-8 shadow-xl">
-                <h1 className="w-full text-center text-2xl font-bold text-white mb-4">Sign In</h1>
+                <h1 className="w-full text-center text-2xl font-bold mb-4">Sign In</h1>
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -94,9 +94,9 @@ export default function Page() {
                             name="user"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-white">Email</FormLabel>
+                                    <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input type="email" {...field} className="bg-gray-800 text-white" />
+                                        <Input type="email" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -108,9 +108,9 @@ export default function Page() {
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-white">Password</FormLabel>
+                                    <FormLabel>Password</FormLabel>
                                     <FormControl>
-                                        <Input type="password" {...field} className="bg-gray-800 text-white" />
+                                        <Input type="password" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -123,24 +123,19 @@ export default function Page() {
                     </form>
                 </Form>
 
-                {/* Divider */}
                 <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-700" />
+                        <div className="w-full border-t border-gray-300 dark:border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                        <span className="bg-gray-900 px-2 text-gray-400">or</span>
+                        <span className="bg-gray-100 dark:bg-gray-900 px-2 text-gray-400">or</span>
                     </div>
                 </div>
 
-                {/* Google Sign-In Button */}
-                <button
-                    onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
-                    className={`w-full flex items-center justify-center gap-3 py-2 rounded-lg transition ${googleLoading ? "bg-gray-400 cursor-not-allowed" : "bg-white text-black hover:bg-gray-200"}`}>
+                <Button onClick={handleGoogleSignIn} disabled={googleLoading}>
                     <FcGoogle size={20} />
-                    {googleLoading ? "Signing in..." : "Continue with Google"}
-                </button>
+                    Continue with Google
+                </Button>
             </Card>
         </PageContainer>
     );
