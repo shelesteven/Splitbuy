@@ -102,7 +102,7 @@ export default function SignUpPage() {
 
                 <Button onClick={handleGoogleSignIn}>
                     <FcGoogle size={20} />
-                    Sign Up with Google
+                    Sign up with Google
                 </Button>
             </Card>
         </PageContainer>
