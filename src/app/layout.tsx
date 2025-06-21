@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className="min-h-screen font-sans antialiased">
-                <ThemeProvider attribute="class" forcedTheme="dark">
-                    <header className="fixed top-0 z-50 w-full bg-background/30 backdrop-blur-md border-b border-indigo-400/40 dark:border-indigo-900/40 shadow-lg">
+            <body className="min-h-screen flex flex-col font-sans antialiased">
+                <ThemeProvider attribute="class">
+                    <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-900 shadow-xl">
                         <nav className="container mx-auto flex items-center justify-between px-4 py-4">
                             <Link href="/" className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 tracking-tight">
                                 Splitbuy
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                         </nav>
                     </header>
 
-                    <main className="relative">{children}</main>
+                    <main className="grow flex flex-col h-full overflow-auto">{children}</main>
                 </ThemeProvider>
             </body>
         </html>
