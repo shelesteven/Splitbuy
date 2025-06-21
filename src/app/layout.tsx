@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
     title: "Splitbuy | Save More Together",
@@ -11,26 +12,28 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
-        <html lang="en">
-            <body className="min-h-screen font-sans antialiased bg-white text-gray-900">
-                <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-md border-b border-zinc-200 shadow-sm">
-                    <nav className="container mx-auto flex items-center justify-between px-4 py-4">
-                        <Link href="/" className="text-2xl font-bold text-indigo-600 tracking-tight">
-                            Splitbuy
-                        </Link>
-
-                        <div className="flex items-center space-x-3">
-                            <Link href="/sign-in">
-                                <Button variant="ghost">Sign In</Button>
+        <html lang="en" suppressHydrationWarning>
+            <body className="min-h-screen font-sans antialiased">
+                <ThemeProvider attribute="class" forcedTheme="dark">
+                    <header className="fixed top-0 z-50 w-full bg-background/30 backdrop-blur-md border-b border-indigo-400/40 dark:border-indigo-900/40 shadow-lg">
+                        <nav className="container mx-auto flex items-center justify-between px-4 py-4">
+                            <Link href="/" className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 tracking-tight">
+                                Splitbuy
                             </Link>
-                            <Link href="/sign-up">
-                                <Button>Create Account</Button>
-                            </Link>
-                        </div>
-                    </nav>
-                </header>
 
-                <main>{children}</main>
+                            <div className="flex items-center space-x-3">
+                                <Link href="/sign-in">
+                                    <Button variant="outline">Sign In</Button>
+                                </Link>
+                                <Link href="/sign-up">
+                                    <Button>Create Account</Button>
+                                </Link>
+                            </div>
+                        </nav>
+                    </header>
+
+                    <main className="relative">{children}</main>
+                </ThemeProvider>
             </body>
         </html>
     );
