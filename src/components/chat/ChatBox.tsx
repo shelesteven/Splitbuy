@@ -21,6 +21,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
     const [chat, setChat] = useState<any>(null);
     const [newMessage, setNewMessage] = useState("");
     const [users, setUsers] = useState<UserData>({});
+    const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -35,6 +36,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             const chatDocRef = doc(db, "chats", chatId as string);
             const unsubscribe = onSnapshot(chatDocRef, async (docSnapshot) => {
                 if (docSnapshot.exists()) {
+                    setError(null);
                     const chatData = docSnapshot.data();
                     setChat({ id: docSnapshot.id, ...chatData });
 
@@ -56,10 +58,15 @@ export function ChatBox({ chatId }: ChatBoxProps) {
                         setUsers(usersData);
                     }
                 }
+            }, (err) => {
+                if (err.code === 'permission-denied') {
+                    setError("No permission to view this chat.");
+                    setChat(null);
+                }
             });
             return () => unsubscribe();
         }
-    }, [chatId]);
+    }, [chatId, users]);
 
     const handleSendMessage = async () => {
         if (!authUser || !chatId || !newMessage.trim()) return;
@@ -77,11 +84,15 @@ export function ChatBox({ chatId }: ChatBoxProps) {
         setNewMessage("");
     };
 
+    if (error) {
+        return null;
+    }
+
     if (!chat) {
         return (
-            <div className="flex items-center justify-center h-full bg-gray-100 rounded-lg">
-                <p className="text-gray-500">Loading chat...</p>
-            </div>
+            <Card className="flex items-center justify-center h-full">
+                <p>Loading chat...</p>
+            </Card>
         );
     }
 
