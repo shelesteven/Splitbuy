@@ -14,10 +14,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
             <body className="min-h-screen flex flex-col font-sans antialiased">
-                <ThemeProvider attribute="class">
+                <ThemeProvider attribute="class" enableSystem>
                     <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-900 shadow-xl">
                         <nav className="container mx-auto flex items-center justify-between px-4 py-4">
-                            <Link href="/" className="text-2xl font-bold text-indigo-900 dark:text-indigo-100 tracking-tight">
+                            <Link href="/" className="text-2xl font-bold tracking-tight">
                                 Splitbuy
                             </Link>
 
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                                     <Button variant="outline">Sign In</Button>
                                 </Link>
                                 <Link href="/sign-up">
-                                    <Button>Create Account</Button>
+                                    <Button>Sign Up</Button>
                                 </Link>
                             </div>
                         </nav>
