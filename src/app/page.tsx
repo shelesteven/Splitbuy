@@ -36,7 +36,7 @@ export default function Home() {
 
                 <Card className="w-full max-w-md bg-background/80 p-8 shadow-xl">
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit((data) => toast.success(JSON.stringify(data)))} className="space-y-6">
+                        <form onSubmit={form.handleSubmit((data) => toast.success(JSON.stringify(data)))} className="space-y-4">
                             <FormField
                                 control={form.control}
                                 name="email"
