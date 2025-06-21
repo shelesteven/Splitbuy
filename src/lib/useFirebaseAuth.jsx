@@ -14,6 +14,7 @@ export default function useFirebaseAuth() {
 
     const authStateChanged = async (authState) => {
         if (!authState) {
+            setAuthUser(null);
             setLoading(false);
             return;
         }
