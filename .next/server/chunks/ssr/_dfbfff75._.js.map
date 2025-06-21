@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 6, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"","debugId":null}},
-    {"offset": {"line": 24, "column": 0}, "map": {"version":3,"sources":["file:///Users/lucasi/Splitbuy/src/app/page.tsx"],"sourcesContent":["import Image from \"next/image\";\n\nexport default function Home() {\n  return (\n    <main className=\"flex min-h-screen flex-col items-center justify-between p-24\">\n      <h1 className=\"text-4xl font-bold\">Welcome to Next.js!</h1>\n      <Image\n        src=\"/next.svg\"\n        alt=\"Next.js Logo\"\n        width={180}\n        height={37}\n        priority\n      />\n      <p className=\"mt-6 text-lg\">\n        Get started by editing{\" \"}\n        <code className=\"bg-gray-100 p-2 rounded\">app/page.tsx</code>\n      </p>\n    </main>\n  );\n}\n"],"names":[],"mappings":";;;;AAAA;;;AAEe,SAAS;IACtB,qBACE,8OAAC;QAAK,WAAU;;0BACd,8OAAC;gBAAG,WAAU;0BAAqB;;;;;;0BACnC,8OAAC,6HAAA,CAAA,UAAK;gBACJ,KAAI;gBACJ,KAAI;gBACJ,OAAO;gBACP,QAAQ;gBACR,QAAQ;;;;;;0BAEV,8OAAC;gBAAE,WAAU;;oBAAe;oBACH;kCACvB,8OAAC;wBAAK,WAAU;kCAA0B;;;;;;;;;;;;;;;;;;AAIlD","debugId":null}}]
-}
