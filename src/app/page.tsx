@@ -17,7 +17,6 @@ import { PageContainer } from "@/components/PageContainer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { toast } from "sonner";
 
 import { db } from "@/lib/firebase";
@@ -31,8 +30,13 @@ const formSchema = z.object({
 
 export default function Home() {
   const router = useRouter();
+  const { authUser, loading } = useAuth();
 
-  const { authUser } = useAuth();
+  useEffect(() => {
+    if (!loading && authUser) {
+      router.replace("/dashboard");
+    }
+  }, [authUser, loading]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -41,17 +45,11 @@ export default function Home() {
     },
   });
 
-  useEffect(() => {
-    if (authUser) {
-      router.replace("/dashboard");
-    }
-  }, [authUser]);
-
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       const q = query(
         collection(db, "users"),
-        where("email", "==", data.email.toLowerCase()),
+        where("email", "==", data.email.toLowerCase())
       );
       const snapshot = await getDocs(q);
 
@@ -69,8 +67,14 @@ export default function Home() {
   };
 
   return (
-    <PageContainer className="items-center justify-center bg-gradient-to-br from-indigo-200 to-white dark:from-indigo-950/40 dark:to-gray-950">
-      <div className="flex flex-col md:flex-row items-center justify-center min-w-full md:gap-16 z-10">
+    <PageContainer className="relative items-center justify-center bg-gradient-to-br from-indigo-200 to-white dark:from-indigo-950/40 dark:to-gray-950 overflow-hidden">
+
+      {/* === Background Animation Blobs === */}
+      <div className="absolute w-[60vw] h-[60vw] bg-purple-400 opacity-20 rounded-full top-[-20%] left-[-20%] blur-3xl animate-blob-1 z-0" />
+      <div className="absolute w-[40vw] h-[40vw] bg-indigo-300 opacity-20 rounded-full bottom-[-10%] right-[-15%] blur-3xl animate-blob-2 z-0" />
+
+      {/* === Foreground Content === */}
+      <div className="relative flex flex-col md:flex-row items-center justify-center min-w-full md:gap-16 z-10">
         <div className="text-center md:text-left max-w-6xl">
           <h1 className="text-4xl md:text-6xl font-extrabold text-indigo-500 dark:text-indigo-400 leading-tight mb-2">
             Group up. Save big.

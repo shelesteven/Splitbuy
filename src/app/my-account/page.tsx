@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthUserContext';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthUserContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+
+import { Card } from '@/components/ui/card';
+import { PageContainer } from '@/components/PageContainer';
 
 interface UserProfile {
   name: string;
@@ -30,7 +33,7 @@ export default function MyProfilePage() {
     const fetchProfile = async () => {
       if (!authUser?.uid) return;
 
-      const docRef = doc(db, 'users', authUser.uid);
+      const docRef = doc(db, "users", authUser.uid);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
@@ -53,25 +56,29 @@ export default function MyProfilePage() {
   if (!authUser || !profile) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-lg text-red-500">Unable to load profile. Please sign in.</p>
+        <p className="text-lg text-red-500">
+          Unable to load profile. Please sign in.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-xl mx-auto mt-20 px-6 py-10 bg-white shadow-xl rounded-2xl border border-gray-200">
-      <h1 className="text-3xl font-bold text-center mb-8">My Profile</h1>
-
+    <PageContainer className="flex justify-center items-center">
+      <Card className="max-w-xl p-8">
+        <h1 className="text-3xl font-bold text-center mb-8">My Profile</h1>
+  
       <div className="space-y-6">
-        <div>
-          <h2 className="text-sm uppercase tracking-wide text-gray-500 font-semibold">Username</h2>
-          <p className="text-xl font-medium text-gray-800">{profile.name}</p>
+          <div>
+            <h2 className="text-sm uppercase tracking-wide font-semibold">Username</h2>
+            <p className="text-xl font-medium text-foreground/60">{profile.name}</p>
+          </div>
+          <div>
+            <h2 className="text-sm uppercase tracking-wide font-semibold">Email</h2>
+            <p className="text-xl font-medium text-foreground/60">{profile.email}</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-sm uppercase tracking-wide text-gray-500 font-semibold">Email</h2>
-          <p className="text-xl font-medium text-gray-800">{profile.email}</p>
-        </div>
-      </div>
+      </Card>
 
       {/* Credit Card Section */}
       <div className="mt-10 border-t pt-6">
@@ -119,7 +126,7 @@ export default function MyProfilePage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
