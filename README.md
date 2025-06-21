@@ -9,6 +9,7 @@ pnpm dev
 ```
 
 Install PNPM or else.
+https://pnpm.io/
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
