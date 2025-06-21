@@ -18,7 +18,10 @@ interface AuthContextType {
 const authUserContext = createContext<AuthContextType>({
     authUser: null,
     loading: true,
-    signOut: async () => {},
+    signOut: async () => {
+        const auth = useFirebaseAuth();
+        await auth.signOut();
+    },
 });
 
 export function AuthUserProvider({ children }: { children: ReactNode }) {
