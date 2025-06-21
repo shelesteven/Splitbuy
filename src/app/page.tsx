@@ -32,7 +32,13 @@ const formSchema = z.object({
 export default function Home() {
   const router = useRouter();
 
-  const { authUser } = useAuth();
+  const { authUser, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && authUser) {
+      router.replace("/dashboard");
+    }
+  }, [authUser, loading]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -40,12 +46,6 @@ export default function Home() {
       email: "",
     },
   });
-
-  useEffect(() => {
-    if (authUser) {
-      router.replace("/dashboard");
-    }
-  }, [authUser]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
