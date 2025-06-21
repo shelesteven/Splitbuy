@@ -34,7 +34,7 @@ export default function Home() {
                     <p className="max-w-full md:max-w-2xl text-md md:text-xl text-gray-800 dark:text-gray-200 mb-8">Discover smarter shopping. Create or join a group buy to save money on bulk items and shipping.</p>
                 </div>
 
-                <Card className="w-full max-w-md bg-gray-900 border-0 p-8 shadow-xl">
+                <Card className="w-full max-w-md bg-gray-100 dark:bg-gray-900 border-0 p-8 shadow-xl">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit((data) => toast.success(JSON.stringify(data)))} className="space-y-4">
                             <FormField
@@ -42,7 +42,7 @@ export default function Home() {
                                 name="email"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-white">Email</FormLabel>
+                                        <FormLabel>Email</FormLabel>
                                         <FormControl>
                                             <Input type="email" placeholder="" {...field} />
                                         </FormControl>
