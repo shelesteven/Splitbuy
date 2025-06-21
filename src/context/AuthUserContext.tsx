@@ -23,7 +23,6 @@ const authUserContext = createContext<AuthContextType>({
         const auth = useFirebaseAuth();
         await auth.signOut();
     },
-    signOut: () => {},
 });
 
 export function AuthUserProvider({ children }: { children: ReactNode }) {
