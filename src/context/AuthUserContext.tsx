@@ -15,6 +15,7 @@ interface AuthContextType {
 }
 
 // Add signOut to context type
+// Add signOut to context type
 const authUserContext = createContext<AuthContextType>({
     authUser: null,
     loading: true,
@@ -22,6 +23,7 @@ const authUserContext = createContext<AuthContextType>({
         const auth = useFirebaseAuth();
         await auth.signOut();
     },
+    signOut: () => {},
 });
 
 export function AuthUserProvider({ children }: { children: ReactNode }) {
