@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col font-sans antialiased overflow-y-scroll bg-white">
         <AuthUserProvider>
-          <ThemeProvider attribute="class" forcedTheme="light" enableSystem>
+          <ThemeProvider attribute="class" forcedTheme="dark" enableSystem>
             <SiteHeader />
             <main className="grow flex flex-col h-full overflow-auto">
               {children}
@@ -64,7 +64,7 @@ function SiteHeader() {
                   Profile
                 </Link>
                 <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                  className="cursor-pointer w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => {
                     signOut();
                     router.push("/sign-in");
@@ -80,13 +80,13 @@ function SiteHeader() {
             <Link href="/sign-in">
               <Button
                 variant="ghost"
-                className="text-gray-800 border border-gray-300 hover:bg-gray-100"
+                className="cursor-pointer text-gray-800 border border-gray-300 hover:bg-gray-100"
               >
                 Sign In
               </Button>
             </Link>
             <Link href="/sign-up">
-              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90">
+              <Button className="cursor-pointer bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:opacity-90">
                 Sign Up
               </Button>
             </Link>

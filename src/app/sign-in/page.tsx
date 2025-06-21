@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react"; // ✅ REQUIRED for useState
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { useAuth } from "@/context/AuthUserContext";
 
 const formSchema = z.object({
   user: z.string().min(1, "Email is required").email("Invalid email format"),
@@ -31,6 +32,14 @@ const formSchema = z.object({
 export default function Page() {
   const router = useRouter();
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  const { authUser, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && authUser) {
+      router.replace("/dashboard");
+    }
+  }, [authUser, loading]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -55,24 +64,18 @@ export default function Page() {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         data.user,
-        data.password
+        data.password,
       );
       console.log("Email sign-in successful:", userCredential.user.email);
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Sign-in error:", error);
       if (error.code === "auth/user-not-found") {
-        form.setError("user", {
-          message: "No account found with this email",
-        });
+        form.setError("user", { message: "No account found with this email" });
       } else if (error.code === "auth/wrong-password") {
-        form.setError("password", {
-          message: "Incorrect password",
-        });
+        form.setError("password", { message: "Incorrect password" });
       } else {
-        form.setError("user", {
-          message: "Sign-in failed. Try again.",
-        });
+        form.setError("user", { message: "Sign-in failed. Try again." });
       }
     }
   };
@@ -99,8 +102,8 @@ export default function Page() {
   };
 
   return (
-    <PageContainer className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1a0033] to-[#10002b] text-white">
-      <Card className="w-full max-w-md rounded-2xl border border-purple-700 bg-gradient-to-br from-purple-800/80 to-pink-900/80 p-8 shadow-2xl text-white">
+    <PageContainer className="container mx-auto items-center justify-center">
+      <Card className="w-full max-w-md bg-gray-100 dark:bg-gray-900 border-0 p-8 shadow-xl">
         <h1 className="w-full text-center text-2xl font-bold mb-4">Sign In</h1>
 
         <Form {...form}>
@@ -110,9 +113,9 @@ export default function Page() {
               name="user"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Email</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} className="text-black" />
+                    <Input type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,16 +127,16 @@ export default function Page() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} className="text-black" />
+                    <Input type="password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full bg-white text-black hover:bg-gray-200">
+            <Button type="submit" className="w-full">
               Continue
             </Button>
           </form>
@@ -141,18 +144,16 @@ export default function Page() {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-500" />
+            <div className="w-full border-t border-gray-300 dark:border-gray-700" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-transparent px-2 text-gray-300">or</span>
+            <span className="bg-gray-100 dark:bg-gray-900 px-2 text-gray-400">
+              or
+            </span>
           </div>
         </div>
 
-        <Button
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-          className="w-full bg-white text-black hover:bg-gray-200 font-medium flex items-center justify-center gap-2"
-        >
+        <Button onClick={handleGoogleSignIn} disabled={googleLoading}>
           <FcGoogle size={20} />
           Continue with Google
         </Button>
