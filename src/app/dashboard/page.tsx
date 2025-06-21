@@ -567,7 +567,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center text-white bg-[#0d061f]">
         Loading...
       </div>
     );
@@ -577,11 +577,20 @@ export default function DashboardPage() {
     <div className="px-4 sm:px-8 lg:px-16 py-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         {/* Search input */}
+
+        <Link href="/create-listing">
+          <Button
+            variant="outline"
+            className="cursor-pointer flex-1 w-full md-basis-[20%]"
+          >
+            Create a listing
+          </Button>
+        </Link>
         <Input
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 w-full md:basis-[70%]"
+          className="flex-1 w-full md:basis-[50%]"
         />
 
         {/* Location filter with map */}
@@ -589,7 +598,7 @@ export default function DashboardPage() {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="min-w-[240px] md:basis-[30%] justify-start relative overflow-hidden"
+              className="min-w-[240px] md:basis-[30%] cursor-pointer justify-start relative overflow-hidden"
             >
               <MapPin className="w-4 h-4 mr-2" />
               <div className="flex flex-col items-start pr-5 overflow-hidden">
@@ -683,18 +692,16 @@ export default function DashboardPage() {
             <p className="text-gray-500 mb-4">
               No products found in your search area.
             </p>
+            <Link href="/create-listing">
+              <Button
+                className="cursor-pointer w-auto max-w-xs self-center"
+                variant="outline"
+              >
+                Create a listing with your product instead?
+              </Button>
+            </Link>
             <Button
-              className="w-auto max-w-xs self-center"
-              variant="outline"
-              onClick={() => {
-                setSearch("");
-                setLocationFilter((prev) => ({ ...prev, radius: 50 }));
-              }}
-            >
-              Create a listing with your product instead?
-            </Button>
-            <Button
-              className="w-auto max-w-xs mt-2 self-center"
+              className="cursor-pointer w-auto max-w-xs mt-2 self-center"
               variant="outline"
               onClick={() => {
                 setSearch("");
