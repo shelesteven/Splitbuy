@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 
-import { PageContainer } from "@/components/page-container";
+import { PageContainer } from "@/components/PageContainer";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -31,7 +31,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row items-center justify-center min-w-full md:gap-16 z-10">
                 <div className="text-center md:text-left max-w-6xl">
                     <h1 className="text-4xl md:text-6xl font-extrabold text-indigo-500 dark:text-indigo-400 leading-tight mb-2">Group up. Save big.</h1>
-                    <p className="max-w-3xl text-md md:text-xl text-gray-800 dark:text-gray-200 mb-8">Discover smarter shopping. Create or join a group buy to save money on bulk items and shipping.</p>
+                    <p className="max-w-full md:max-w-2xl text-md md:text-xl text-gray-800 dark:text-gray-200 mb-8">Discover smarter shopping. Create or join a group buy to save money on bulk items and shipping.</p>
                 </div>
 
                 <Card className="w-full max-w-md bg-background/80 p-8 shadow-xl">

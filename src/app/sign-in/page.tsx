@@ -1,6 +1,6 @@
 "use client";
 
-import { PageContainer } from "@/components/page-container";
+import { PageContainer } from "@/components/PageContainer";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
