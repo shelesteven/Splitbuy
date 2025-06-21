@@ -20,7 +20,6 @@ type Product = {
   description: string;
   location: string;
   coordinates: { lat: number; lng: number };
-  sponsored: boolean;
   imageUrl: string;
   price: string;
 };
@@ -38,7 +37,6 @@ const allProducts: Product[] = [
     description: "Top quality noise-cancelling headphones",
     location: "Downtown Toronto",
     coordinates: { lat: 43.6532, lng: -79.3832 },
-    sponsored: true,
     imageUrl:
       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=200&fit=crop",
     price: "$299",
@@ -49,7 +47,6 @@ const allProducts: Product[] = [
     description: "High-performance gaming laptop",
     location: "North York",
     coordinates: { lat: 43.7615, lng: -79.4111 },
-    sponsored: true,
     imageUrl:
       "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=300&h=200&fit=crop",
     price: "$1,299",
@@ -60,7 +57,6 @@ const allProducts: Product[] = [
     description: "Classic film camera in excellent condition",
     location: "Scarborough",
     coordinates: { lat: 43.7731, lng: -79.2578 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=300&h=200&fit=crop",
     price: "$450",
@@ -71,7 +67,6 @@ const allProducts: Product[] = [
     description: "Eco-friendly commuter bike",
     location: "Etobicoke",
     coordinates: { lat: 43.6205, lng: -79.5132 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=300&h=200&fit=crop",
     price: "$1,200",
@@ -82,7 +77,6 @@ const allProducts: Product[] = [
     description: "Modern 3-seater sofa",
     location: "Mississauga",
     coordinates: { lat: 43.589, lng: -79.6441 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=200&fit=crop",
     price: "$800",
@@ -93,7 +87,6 @@ const allProducts: Product[] = [
     description: "Latest fitness tracking smartwatch",
     location: "Markham",
     coordinates: { lat: 43.8561, lng: -79.337 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=200&fit=crop",
     price: "$350",
@@ -104,7 +97,6 @@ const allProducts: Product[] = [
     description: "Professional mountain bike",
     location: "Brampton",
     coordinates: { lat: 43.7315, lng: -79.7624 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1544191696-15693072648c?w=300&h=200&fit=crop",
     price: "$650",
@@ -115,7 +107,6 @@ const allProducts: Product[] = [
     description: "Professional espresso machine",
     location: "Richmond Hill",
     coordinates: { lat: 43.8828, lng: -79.4403 },
-    sponsored: false,
     imageUrl:
       "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&h=200&fit=crop",
     price: "$425",
@@ -140,6 +131,7 @@ const calculateDistance = (
   return R * c;
 };
 
+// Mapbox Map Component
 const MapboxMap = ({
   center,
   radius,
@@ -160,7 +152,6 @@ const MapboxMap = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isMapLoaded, setIsMapLoaded] = useState(false); // Track map loaded state
 
   // Initialize map
   useEffect(() => {
@@ -207,14 +198,9 @@ const MapboxMap = ({
         reverseGeocode(coords);
       });
 
-      // Wait for style to load before adding markers and circle
+      // Add markers and circle when map loads
       map.current.on("load", () => {
-        setIsMapLoaded(true);
-      });
-
-      // Also listen for style.load event as a fallback
-      map.current.on("style.load", () => {
-        setIsMapLoaded(true);
+        addMarkersAndCircle();
       });
     }
 
@@ -222,51 +208,31 @@ const MapboxMap = ({
       if (map.current) {
         map.current.remove();
         map.current = null;
-        setIsMapLoaded(false);
       }
     };
   }, []);
 
-  // Update map center when props change, but only if map is loaded
+  // Update map center when props change
+
   useEffect(() => {
-    if (map.current && isMapLoaded) {
+    if (map.current && map.current.isStyleLoaded()) {
       map.current.setCenter([center.lng, center.lat]);
       addMarkersAndCircle();
-    }
-  }, [center, radius, isMapLoaded]);
-
-  // Add markers and circle when map first loads
-  useEffect(() => {
-    if (isMapLoaded) {
-      addMarkersAndCircle();
-    }
-  }, [isMapLoaded]);
-
-  const addMarkersAndCircle = () => {
-    if (!map.current || !isMapLoaded) return;
-
-    // Check if map style is loaded
-    if (!map.current.isStyleLoaded()) {
-      // If style is not loaded, wait for it
-      map.current.once("style.load", () => {
+    } else if (map.current) {
+      map.current.once("load", () => {
+        map.current.setCenter([center.lng, center.lat]);
         addMarkersAndCircle();
       });
-      return;
     }
+  }, [center, radius]);
+
+  const addMarkersAndCircle = () => {
+    if (!map.current) return;
 
     // Remove existing sources and layers
-    [
-      "radius-circle",
-      "products",
-      "center-marker",
-      "radius-circle-border",
-    ].forEach((id) => {
-      if (map.current!.getLayer(id)) {
-        map.current!.removeLayer(id);
-      }
-      if (map.current!.getSource(id)) {
-        map.current!.removeSource(id);
-      }
+    ["radius-circle", "products", "center-marker"].forEach((id) => {
+      if (map.current!.getLayer(id)) map.current!.removeLayer(id);
+      if (map.current!.getSource(id)) map.current!.removeSource(id);
     });
 
     // Add radius circle
@@ -335,7 +301,6 @@ const MapboxMap = ({
         properties: {
           id: product.id,
           name: product.name,
-          sponsored: product.sponsored,
           distance: calculateDistance(center, product.coordinates),
         },
         geometry: {
@@ -356,12 +321,7 @@ const MapboxMap = ({
       source: "products",
       paint: {
         "circle-radius": 6,
-        "circle-color": [
-          "case",
-          ["get", "sponsored"],
-          "#fbbf24", // yellow for sponsored
-          "#10b981", // green for regular
-        ],
+        "circle-color": "#10b981", // green for all products
         "circle-stroke-width": 1,
         "circle-stroke-color": "#ffffff",
         "circle-opacity": ["case", ["<=", ["get", "distance"], radius], 1, 0.3],
@@ -369,7 +329,6 @@ const MapboxMap = ({
     });
 
     // Add popup on product click
-    map.current.off("click", "products"); // Remove existing listener
     map.current.on("click", "products", (e) => {
       if (e.features && e.features[0]) {
         const feature = e.features[0];
@@ -687,8 +646,6 @@ export default function DashboardPage() {
   const filteredProducts = useMemo(() => {
     return allProducts
       .filter((p) => {
-        if (p.sponsored) return false;
-
         const matchesSearch =
           p.name.toLowerCase().includes(search.toLowerCase()) ||
           p.description.toLowerCase().includes(search.toLowerCase());
@@ -708,13 +665,6 @@ export default function DashboardPage() {
       .sort((a, b) => a.distance - b.distance);
   }, [search, locationFilter]);
 
-  const sponsoredProducts = allProducts
-    .filter((p) => p.sponsored)
-    .map((p) => ({
-      ...p,
-      distance: calculateDistance(locationFilter.center, p.coordinates),
-    }));
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-gray-950">
@@ -731,7 +681,7 @@ export default function DashboardPage() {
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
+          className="flex-1 w-full md:basis-[70%]"
         />
 
         {/* Location filter with map */}
@@ -739,11 +689,11 @@ export default function DashboardPage() {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className="min-w-[240px] justify-start relative"
+              className="min-w-[240px] md:basis-[30%] justify-start relative overflow-hidden"
             >
               <MapPin className="w-4 h-4 mr-2" />
-              <div className="flex flex-col items-start">
-                <span className="text-sm truncate">
+              <div className="flex flex-col items-start pr-5 overflow-hidden">
+                <span className="text-sm truncate w-full">
                   {isGettingLocation
                     ? "Getting your location..."
                     : locationFilter.address}
@@ -815,56 +765,9 @@ export default function DashboardPage() {
                 onCurrentLocationRequest={getCurrentLocation}
               />
             </div>
-
-            {/* Apply button */}
-            <div className="p-4 border-t">
-              <Button className="w-full">
-                Show {filteredProducts.length} items
-              </Button>
-            </div>
           </PopoverContent>
         </Popover>
       </div>
-
-      {/* Sponsored products horizontal scroll */}
-      {sponsoredProducts.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-3 text-xl font-semibold">Sponsored Products</h2>
-          <div className="flex space-x-4 overflow-x-auto py-2">
-            {sponsoredProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="min-w-[280px] flex-shrink-0 border border-yellow-400 bg-yellow-50 dark:bg-yellow-900 overflow-hidden"
-              >
-                <div className="relative">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-yellow-900 px-2 py-1 rounded-full text-xs font-semibold">
-                    Sponsored
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg">{product.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                    {product.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-green-600">
-                      {product.price}
-                    </span>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {product.distance.toFixed(1)} km away
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Product grid */}
       <section>
@@ -876,11 +779,22 @@ export default function DashboardPage() {
           </span>
         </div>
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 flex flex-col">
             <p className="text-gray-500 mb-4">
               No products found in your search area.
             </p>
             <Button
+              className="w-auto max-w-xs self-center"
+              variant="outline"
+              onClick={() => {
+                setSearch("");
+                setLocationFilter((prev) => ({ ...prev, radius: 50 }));
+              }}
+            >
+              Create a listing with your product instead?
+            </Button>
+            <Button
+              className="w-auto max-w-xs mt-2 self-center"
               variant="outline"
               onClick={() => {
                 setSearch("");
@@ -888,7 +802,7 @@ export default function DashboardPage() {
               }}
             >
               Expand search area
-            </Button>
+            </Button>{" "}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
