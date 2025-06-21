@@ -25,3 +25,4 @@ export const firebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig
 export const auth = getAuth(firebaseApp);
 export const provider = new GoogleAuthProvider();
 export const db = getFirestore(firebaseApp);
+
