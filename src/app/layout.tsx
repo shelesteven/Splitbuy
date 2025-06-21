@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UserCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
@@ -36,16 +37,19 @@ function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-neutral-300 dark:border-neutral-800 shadow-xl">
-      <nav className="container mx-auto flex items-center justify-between px-4 py-4">
+      <nav className="mx-auto flex items-center justify-between px-16 py-4">
         <Link href="/" className="text-2xl font-bold tracking-tight">
           Splitbuy
         </Link>
 
         {authUser ? (
           <div className="relative">
-            <Button variant="outline" onClick={() => setOpen(!open)}>
-              {authUser.email}
-            </Button>
+            <button
+              onClick={() => setOpen(!open)}
+              className="cursor-pointer rounded-full p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+            >
+              <UserCircle className="w-6 h-6" />
+            </button>
 
             {open && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
