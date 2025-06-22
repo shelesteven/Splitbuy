@@ -48,23 +48,34 @@ async function getPageContentWithPuppeteer(
 
 function preprocessHtml(htmlContent: string | undefined): {
   textContent: string;
-  imageUrls: string[];
+  imageInfos: { src: string; alt: string }[];
 } {
-  if (!htmlContent) return { textContent: "", imageUrls: [] };
+  if (!htmlContent) return { textContent: "", imageInfos: [] };
 
   try {
     const $ = cheerio.load(htmlContent);
-    const imageUrls = new Set<string>();
+    const imageInfos = new Map<string, { src: string; alt: string }>();
+
+    // Helper to add image info
+    const addImage = (src: string | undefined, alt: string | undefined) => {
+      if (src && !src.startsWith("data:") && !imageInfos.has(src)) {
+        imageInfos.set(src, { src, alt: alt || "" });
+      }
+    };
 
     // Get high-quality images from meta tags first
-    $('meta[property="og:image"]')
-      .attr("content")
-      ?.split(",")
-      .forEach((url) => imageUrls.add(url.trim()));
-    $('meta[property="twitter:image"]')
-      .attr("content")
-      ?.split(",")
-      .forEach((url) => imageUrls.add(url.trim()));
+    $('meta[property="og:image"]').each((i, el) => {
+      const content = $(el).attr("content");
+      if (content) {
+        content.split(",").forEach((url) => addImage(url.trim(), "og:image"));
+      }
+    });
+    $('meta[property="twitter:image"]').each((i, el) => {
+      const content = $(el).attr("content");
+      if (content) {
+        addImage(content.trim(), "twitter:image");
+      }
+    });
 
     $("script, style, iframe, nav, footer, header, aside").remove();
 
@@ -76,9 +87,8 @@ function preprocessHtml(htmlContent: string | undefined): {
     // Get other images from the main content area
     mainContent.find("img").each((i, el) => {
       const src = $(el).attr("src");
-      if (src && !src.startsWith("data:")) {
-        imageUrls.add(src);
-      }
+      const alt = $(el).attr("alt");
+      addImage(src, alt);
     });
 
     const textContent = mainContent.html() || "";
@@ -89,16 +99,16 @@ function preprocessHtml(htmlContent: string | undefined): {
       .trim()
       .substring(0, 15000);
 
-    return { textContent: cleanedText, imageUrls: Array.from(imageUrls) };
+    return { textContent: cleanedText, imageInfos: Array.from(imageInfos.values()) };
   } catch (error) {
     console.error("Error preprocessing HTML:", error);
-    return { textContent: htmlContent.substring(0, 10000), imageUrls: [] };
+    return { textContent: htmlContent.substring(0, 10000), imageInfos: [] };
   }
 }
 
 async function callGroqApi(
   content: string,
-  imageUrls: string[],
+  imageInfos: { src: string; alt: string }[],
   url: string,
 ) {
   const chatCompletion = await groq.chat.completions.create({
@@ -117,7 +127,7 @@ A "discount" can be a standard price reduction (e.g., "was $10, now $8") OR a si
     {
       "name": "The full product name.",
       "category": "The most relevant product category.",
-      "image": "From the list of possible image URLs provided, select the one that is the best and most representative main product image. If no suitable URL is found in the list, this value MUST be null.",
+      "image": "From the list of possible images, select the URL of the best and most representative main product image. Prioritize images where the alt text closely matches the product name. If no image has matching alt text, select the first high-quality image from the list. If no suitable URL is found, this value MUST be null.",
       "description": "A concise and appealing description of the product. If not available, use null.",
       "discountDescription": "A clear description of the discount offer (e.g., '2 for $15'). If not available, use null.",
       "pricePerUnit": "The original price for a single item, as a number. If not available, use null.",
@@ -129,8 +139,10 @@ A "discount" can be a standard price reduction (e.g., "was $10, now $8") OR a si
       },
       {
         role: "user",
-        content: `Here is the processed text content from ${url}:\n\n${content}\n\nHere is a list of potential image URLs found on the page. Please choose the best one:\n${imageUrls.join(
-          "\n",
+        content: `Here is the processed text content from ${url}:\n\n${content}\n\nHere is a list of potential images with their alt text. Choose the best one based on the instructions:\n${JSON.stringify(
+          imageInfos,
+          null,
+          2,
         )}`,
       },
     ],
@@ -161,10 +173,10 @@ export async function POST(request: Request) {
     console.log("Attempting fast fetch with axios...");
     let htmlContent = await getPageContentWithAxios(url);
     if (htmlContent) {
-      const { textContent, imageUrls } = preprocessHtml(htmlContent);
+      const { textContent, imageInfos } = preprocessHtml(htmlContent);
 
       if (textContent) {
-        const initialResult = await callGroqApi(textContent, imageUrls, url);
+        const initialResult = await callGroqApi(textContent, imageInfos, url);
         // 2. If the fast attempt succeeds, we're done.
         if (!initialResult.error) {
           console.log("Success with fast fetch!");
@@ -186,8 +198,8 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
-    const { textContent, imageUrls } = preprocessHtml(htmlContent);
-    const finalResult = await callGroqApi(textContent, imageUrls, url);
+    const { textContent, imageInfos } = preprocessHtml(htmlContent);
+    const finalResult = await callGroqApi(textContent, imageInfos, url);
 
     // 4. Return the result of the full browser attempt.
     if (!finalResult.error) {
