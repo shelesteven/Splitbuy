@@ -97,23 +97,25 @@ export function ChatBox({ chatId }: ChatBoxProps) {
     }
 
     return (
-        <Card className="w-full h-full flex flex-col">
-            <div className="px-4 pb-4 border-b">
+        <Card className="flex flex-col h-full">
+            <div className="px-4 pb-4 border-b flex-shrink-0">
                 <h2 className="text-xl font-bold">Chat</h2>
                 {chat.users && <div className="text-sm text-gray-600 mt-1">Participants: {chat.users.map((uid: string) => users[uid] || "Loading...").join(", ")}</div>}
             </div>
-            <div className="flex-grow p-4 overflow-y-auto">
-                {chat.messages.map((message: any, index: number) => (
-                    <div key={index} className={`flex mb-2 ${message.senderId === authUser?.uid ? "justify-end" : "justify-start"}`}>
-                        <div className={`p-2 rounded-lg ${message.senderId === authUser?.uid ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-800"}`}>
-                            {message.senderId !== authUser?.uid && <p className="text-sm font-semibold">{users[message.senderId] || "Unknown User"}</p>}
-                            <p>{message.text}</p>
+            <div className="flex-grow min-h-0 overflow-auto">
+                <div className="p-4">
+                    {chat.messages.map((message: any, index: number) => (
+                        <div key={index} className={`flex mb-2 ${message.senderId === authUser?.uid ? "justify-end" : "justify-start"}`}>
+                            <div className={`p-2 rounded-lg ${message.senderId === authUser?.uid ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-800"}`}>
+                                {message.senderId !== authUser?.uid && <p className="text-sm font-semibold">{users[message.senderId] || "Unknown User"}</p>}
+                                <p>{message.text}</p>
+                            </div>
                         </div>
-                    </div>
-                ))}
-                <div ref={messagesEndRef} />
+                    ))}
+                    <div ref={messagesEndRef} />
+                </div>
             </div>
-            <div className="px-4 pt-4 border-t">
+            <div className="px-4 pt-4 border-t flex-shrink-0">
                 <div className="flex gap-2">
                     <Input type="text" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} />
                     <Button onClick={handleSendMessage}>Send</Button>

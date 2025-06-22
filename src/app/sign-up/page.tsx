@@ -6,6 +6,7 @@ import { FcGoogle } from "react-icons/fc";
 import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, provider, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
 
 import { PageContainer } from "@/components/PageContainer";
 
@@ -78,10 +79,11 @@ export default function SignUpPage() {
       await saveUserToFirestore(user, username);
 
       console.log("Email sign-up successful:", user.email);
+      toast.success("Successfully signed up!");
       router.push("/dashboard");
     } catch (error: any) {
-      console.error("Email Sign-Up Error:", error);
-      alert("Sign-up failed: " + error.message);
+      console.error("Sign-up error:", error);
+      toast.error("Sign-up failed: " + error.message);
     }
   };
 
@@ -95,11 +97,12 @@ export default function SignUpPage() {
       await saveUserToFirestore(user, user.displayName || "No Name");
 
       console.log("Google sign-in successful:", user.email);
+      toast.success("Successfully signed up!");
       router.push("/dashboard");
     } catch (error: any) {
       if (error.code !== "auth/cancelled-popup-request") {
-        console.error("Google Sign-In Error:", error);
-        alert("Google Sign-In failed. See console for details.");
+        console.error("Google Sign-In error:", error);
+        toast.error("Sign-in failed. See console for details.");
       }
     } finally {
       setGoogleLoading(false);

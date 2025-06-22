@@ -54,14 +54,13 @@ export default function Home() {
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
-        toast.success("Account found in Firestore. Redirecting to sign-in.");
         router.push("/sign-in");
       } else {
         toast("No account found. Redirecting to sign-up.");
         router.push(`/sign-up?email=${encodeURIComponent(data.email)}`);
       }
     } catch (error) {
-      toast.error("Failed to check Firestore.");
+      toast.error("Failed to check database.");
       console.error("Firestore error:", error);
     }
   };

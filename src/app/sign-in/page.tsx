@@ -8,6 +8,7 @@ import { z } from "zod";
 import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { auth, provider, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { toast } from "sonner";
 
 import { PageContainer } from "@/components/PageContainer";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export default function Page() {
         data.password,
       );
       console.log("Email sign-in successful:", userCredential.user.email);
+      toast.success("Successfully signed in!");
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Sign-in error:", error);
@@ -90,11 +92,12 @@ export default function Page() {
       await saveUserToFirestore(user, user.displayName || "No Name");
 
       console.log("Google sign-in successful:", user.email);
+      toast.success("Successfully signed in!");
       router.push("/dashboard");
     } catch (error: any) {
       if (error.code !== "auth/cancelled-popup-request") {
         console.error("Google Sign-In Error:", error);
-        alert("Google Sign-In failed. See console for details.");
+        toast.error("Sign-in failed. See console for details.");
       }
     } finally {
       setGoogleLoading(false);

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthUserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface ChatListProps {
     onSelectChat: (chatId: string) => void;
@@ -85,13 +86,13 @@ export function ChatList({ onSelectChat }: ChatListProps) {
         // Filter out empty emails and validate
         const validEmails = newChatUserEmails.filter((email) => email.trim() !== "");
         if (validEmails.length === 0) {
-            alert("Please enter at least one email address.");
+            toast.error("Please enter at least one email address.");
             return;
         }
 
         // Check if user is trying to invite themselves
         if (authUser.email && validEmails.some((email) => email.toLowerCase() === authUser.email?.toLowerCase())) {
-            alert("You cannot invite yourself to a chat.");
+            toast.error("You cannot invite yourself to a chat.");
             return;
         }
 
@@ -112,7 +113,7 @@ export function ChatList({ onSelectChat }: ChatListProps) {
             });
 
             if (notFoundEmails.length > 0) {
-                alert(`Users not found: ${notFoundEmails.join(", ")}`);
+                toast.error(`Could not find email(s): ${notFoundEmails.join(", ")}.`);
                 return;
             }
 
@@ -139,11 +140,12 @@ export function ChatList({ onSelectChat }: ChatListProps) {
                 createdAt: new Date().toISOString(),
             });
 
+            toast.success("Chat created successfully!");
             onSelectChat(chatRef.id);
             setNewChatUserEmails([""]);
         } catch (error) {
             console.error("Error creating chat:", error);
-            alert("Failed to create chat. Please try again.");
+            toast.error("Failed to create chat. Please try again.");
         }
     };
 
