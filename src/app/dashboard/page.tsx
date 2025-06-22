@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthUserContext";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,106 +14,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MapPin, Search } from "lucide-react";
-import Link from "next/link";
-
-type Product = {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  coordinates: { lat: number; lng: number };
-  imageUrl: string;
-  price: string;
-};
+import { allProducts, Product } from "@/lib/products";
 
 type LocationFilter = {
   center: { lat: number; lng: number };
   radius: number; // in km
   address: string;
 };
-
-const allProducts: Product[] = [
-  {
-    id: "1",
-    name: "Premium Wireless Headphones",
-    description: "Top quality noise-cancelling headphones",
-    location: "Downtown Toronto",
-    coordinates: { lat: 43.6532, lng: -79.3832 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=200&fit=crop",
-    price: "$299",
-  },
-  {
-    id: "2",
-    name: "Gaming Laptop",
-    description: "High-performance gaming laptop",
-    location: "North York",
-    coordinates: { lat: 43.7615, lng: -79.4111 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=300&h=200&fit=crop",
-    price: "$1,299",
-  },
-  {
-    id: "3",
-    name: "Vintage Camera",
-    description: "Classic film camera in excellent condition",
-    location: "Scarborough",
-    coordinates: { lat: 43.7731, lng: -79.2578 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=300&h=200&fit=crop",
-    price: "$450",
-  },
-  {
-    id: "4",
-    name: "Electric Bike",
-    description: "Eco-friendly commuter bike",
-    location: "Etobicoke",
-    coordinates: { lat: 43.6205, lng: -79.5132 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=300&h=200&fit=crop",
-    price: "$1,200",
-  },
-  {
-    id: "5",
-    name: "Designer Sofa",
-    description: "Modern 3-seater sofa",
-    location: "Mississauga",
-    coordinates: { lat: 43.589, lng: -79.6441 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=200&fit=crop",
-    price: "$800",
-  },
-  {
-    id: "6",
-    name: "Smart Watch",
-    description: "Latest fitness tracking smartwatch",
-    location: "Markham",
-    coordinates: { lat: 43.8561, lng: -79.337 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=200&fit=crop",
-    price: "$350",
-  },
-  {
-    id: "7",
-    name: "Mountain Bike",
-    description: "Professional mountain bike",
-    location: "Brampton",
-    coordinates: { lat: 43.7315, lng: -79.7624 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1544191696-15693072648c?w=300&h=200&fit=crop",
-    price: "$650",
-  },
-  {
-    id: "8",
-    name: "Coffee Machine",
-    description: "Professional espresso machine",
-    location: "Richmond Hill",
-    coordinates: { lat: 43.8828, lng: -79.4403 },
-    imageUrl:
-      "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=300&h=200&fit=crop",
-    price: "$425",
-  },
-];
 
 // Calculate distance between two coordinates using Haversine formula
 const calculateDistance = (
@@ -154,6 +62,11 @@ const MapboxMap = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const filteredProducts = allProducts.filter(p => {
+    const distance = calculateDistance(center, p.coordinates);
+    return distance <= radius;
+  });
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -163,7 +76,7 @@ const MapboxMap = ({
     const MAPBOX_TOKEN =
       process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "YOUR_MAPBOX_TOKEN_HERE";
 
-    if (!window.mapboxgl) {
+    if (!(window as any).mapboxgl) {
       // Dynamically load Mapbox GL JS
       const script = document.createElement("script");
       script.src = "https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js";
@@ -179,10 +92,10 @@ const MapboxMap = ({
     }
 
     function initializeMap() {
-      if (map.current) return;
+      if (map.current || !mapContainer.current) return;
 
-      map.current = new window.mapboxgl.Map({
-        container: mapContainer.current!,
+      map.current = new (window as any).mapboxgl.Map({
+        container: mapContainer.current,
         style: "mapbox://styles/mapbox/streets-v12",
         center: [center.lng, center.lat],
         zoom: 11,
@@ -190,19 +103,19 @@ const MapboxMap = ({
       });
 
       // Add navigation controls
-      map.current.addControl(new window.mapboxgl.NavigationControl());
+      if (map.current) {
+        map.current.addControl(new (window as any).mapboxgl.NavigationControl());
 
-      // Add click handler
-      map.current.on("click", (e) => {
-        const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng };
-        onLocationChange(coords);
-        reverseGeocode(coords);
-      });
+        // Add click handler
+        map.current.on("click", (e) => {
+          const coords = { lat: e.lngLat.lat, lng: e.lngLat.lng };
+          onLocationChange(coords);
+          reverseGeocode(coords);
+        });
 
-      // Add markers and circle when map loads
-      map.current.on("load", () => {
-        addMarkersAndCircle();
-      });
+        // Add markers and circle after map loads
+        map.current.on("load", addMarkersAndCircle);
+      }
     }
 
     return () => {
@@ -211,7 +124,7 @@ const MapboxMap = ({
         map.current = null;
       }
     };
-  }, []);
+  }, [center]);
 
   // Update map center when props change
   useEffect(() => {
@@ -220,139 +133,114 @@ const MapboxMap = ({
       addMarkersAndCircle();
     } else if (map.current) {
       map.current.once("load", () => {
-        map.current.setCenter([center.lng, center.lat]);
+        map.current?.setCenter([center.lng, center.lat]);
         addMarkersAndCircle();
       });
     }
   }, [center, radius]);
 
+  useEffect(() => {
+    if (map.current?.isStyleLoaded()) {
+      addMarkersAndCircle();
+    }
+  }, [filteredProducts, center, radius, map.current]);
+
   const addMarkersAndCircle = () => {
     if (!map.current) return;
 
-    // Remove existing sources and layers
-    ["radius-circle", "products", "center-marker"].forEach((id) => {
-      if (map.current!.getLayer(id)) map.current!.removeLayer(id);
-      if (map.current!.getSource(id)) map.current!.removeSource(id);
+    // Clear existing features
+    const sources = ["product-locations", "search-radius"];
+    const layers = ["product-markers", "search-radius-circle"];
+
+    layers.forEach(layerId => {
+      if (map.current?.getLayer(layerId)) {
+        map.current?.removeLayer(layerId);
+      }
     });
 
-    // Add radius circle
+    sources.forEach(sourceId => {
+      if (map.current?.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+    });
+
+    // Add markers for filtered products
+    if (filteredProducts.length > 0) {
+      map.current.addSource("product-locations", {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: filteredProducts.map((p) => ({
+            type: "Feature",
+            geometry: {
+              type: "Point",
+              coordinates: [p.coordinates.lng, p.coordinates.lat],
+            },
+            properties: {
+              id: p.id,
+              name: p.name,
+              description: p.description,
+            },
+          })),
+        },
+      });
+
+      map.current.addLayer({
+        id: "product-markers",
+        type: "symbol",
+        source: "product-locations",
+        layout: {
+          "icon-image": "marker-15",
+          "icon-allow-overlap": true,
+        },
+      });
+
+      // Add popup on marker click
+      map.current.on("click", "product-markers", (e) => {
+        if (map.current && e.features && e.features.length > 0) {
+          const feature = e.features[0];
+          if (feature.geometry.type === 'Point' && feature.properties) {
+            const coordinates = feature.geometry.coordinates.slice();
+            const { name, description } = feature.properties;
+            
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+
+            new (window as any).mapboxgl.Popup()
+              .setLngLat(coordinates)
+              .setHTML(`<h3>${name}</h3><p>${description}</p>`)
+              .addTo(map.current);
+          }
+        }
+      });
+    }
+
+    // Add search radius circle
     const radiusInMeters = radius * 1000;
     const options = { steps: 80, units: "meters" as const };
-    const circle = window.turf?.circle(
+    const circle = (window as any).turf?.circle(
       [center.lng, center.lat],
       radiusInMeters,
-      options,
+      options
     );
 
-    if (circle) {
-      map.current.addSource("radius-circle", {
+    if (map.current && circle) {
+      map.current.addSource("search-radius", {
         type: "geojson",
         data: circle,
       });
 
       map.current.addLayer({
-        id: "radius-circle",
+        id: "search-radius-circle",
         type: "fill",
-        source: "radius-circle",
+        source: "search-radius",
         paint: {
-          "fill-color": "#3b82f6",
-          "fill-opacity": 0.1,
-        },
-      });
-
-      map.current.addLayer({
-        id: "radius-circle-border",
-        type: "line",
-        source: "radius-circle",
-        paint: {
-          "line-color": "#3b82f6",
-          "line-width": 2,
-          "line-dasharray": [2, 2],
+          "fill-color": "#007cff",
+          "fill-opacity": 0.2,
         },
       });
     }
-
-    // Add center marker
-    map.current.addSource("center-marker", {
-      type: "geojson",
-      data: {
-        type: "Point",
-        coordinates: [center.lng, center.lat],
-      },
-    });
-
-    map.current.addLayer({
-      id: "center-marker",
-      type: "circle",
-      source: "center-marker",
-      paint: {
-        "circle-radius": 8,
-        "circle-color": "#3b82f6",
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#ffffff",
-      },
-    });
-
-    // Add product markers
-    const productsData = {
-      type: "FeatureCollection" as const,
-      features: allProducts.map((product) => ({
-        type: "Feature" as const,
-        properties: {
-          id: product.id,
-          name: product.name,
-          distance: calculateDistance(center, product.coordinates),
-        },
-        geometry: {
-          type: "Point" as const,
-          coordinates: [product.coordinates.lng, product.coordinates.lat],
-        },
-      })),
-    };
-
-    map.current.addSource("products", {
-      type: "geojson",
-      data: productsData,
-    });
-
-    map.current.addLayer({
-      id: "products",
-      type: "circle",
-      source: "products",
-      paint: {
-        "circle-radius": 6,
-        "circle-color": "#10b981", // green for all products
-        "circle-stroke-width": 1,
-        "circle-stroke-color": "#ffffff",
-        "circle-opacity": ["case", ["<=", ["get", "distance"], radius], 1, 0.3],
-      },
-    });
-
-    // Add popup on product click
-    map.current.on("click", "products", (e) => {
-      if (e.features && e.features[0]) {
-        const feature = e.features[0];
-        const product = allProducts.find(
-          (p) => p.id === feature.properties?.id,
-        );
-
-        if (product) {
-          new window.mapboxgl.Popup()
-            .setLngLat([product.coordinates.lng, product.coordinates.lat])
-            .setHTML(
-              `
-              <div class="p-2">
-                <h3 class="font-bold">${product.name}</h3>
-                <p class="text-sm text-gray-600">${product.description}</p>
-                <p class="text-sm font-semibold text-green-600">${product.price}</p>
-                <p class="text-xs text-gray-500">${feature.properties?.distance.toFixed(1)} km away</p>
-              </div>
-            `,
-            )
-            .addTo(map.current!);
-        }
-      }
-    });
   };
 
   // Geocoding search
@@ -415,6 +303,18 @@ const MapboxMap = ({
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Update circle on radius change
+  useEffect(() => {
+    if (!map.current) return;
+
+    const source = map.current.getSource("search-radius");
+    if (source && source.type === "geojson") {
+      const centerPoint = (window as any).turf.point([center.lng, center.lat]);
+      const buffered = (window as any).turf.buffer(centerPoint, radius, { units: "kilometers" });
+      source.setData(buffered);
+    }
+  }, [radius, center]);
 
   return (
     <div className="w-full">
@@ -667,7 +567,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center text-white bg-[#0d061f]">
         Loading...
       </div>
     );
@@ -812,34 +712,40 @@ export default function DashboardPage() {
             </Button>{" "}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="relative">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                    {product.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-green-600">
-                      {product.price}
-                    </span>
-                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {product.distance.toFixed(1)} km away
-                    </span>
+              <Link href={`/group_buys/${product.id}`} key={product.id}>
+                <Card
+                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full"
+                >
+                  <div className="relative">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-48 object-cover"
+                    />
                   </div>
-                </div>
-              </Card>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                      {product.description}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-green-600">
+                          {product.discountedPrice}
+                        </span>
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400 line-through">
+                          {product.price}
+                        </span>
+                      </div>
+                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {product.distance.toFixed(1)} km away
+                      </span>
+                    </div>
+                  </div>
+                </Card>
+              </Link>
             ))}
           </div>
         )}
