@@ -87,22 +87,22 @@ export function PurchaseRequestForm({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Auto-calculated amounts */}
-          <div className="bg-blue-50 p-4 rounded-lg border">
-            <h4 className="font-medium mb-2">Purchase Summary</h4>
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border dark:border-blue-900/50">
+            <h4 className="font-medium mb-2 text-gray-800 dark:text-gray-200">Purchase Summary</h4>
             <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
                 <span>Price per unit:</span>
-                <span className="font-medium">${productPrice.toFixed(2)}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">${productPrice.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
                 <span>Number of participants:</span>
-                <span className="font-medium">{participantCount}</span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{participantCount}</span>
               </div>
-              <div className="flex justify-between border-t pt-1 font-semibold">
+              <div className="flex justify-between border-t pt-1 font-semibold text-gray-800 dark:text-gray-200 dark:border-gray-700">
                 <span>Total purchase amount:</span>
-                <span>${totalAmount.toFixed(2)}</span>
+                <span className="text-gray-900 dark:text-gray-100">${totalAmount.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-green-600 font-semibold">
+              <div className="flex justify-between text-green-600 dark:text-green-400 font-semibold">
                 <span>Amount per participant:</span>
                 <span>${amountPerPerson.toFixed(2)}</span>
               </div>

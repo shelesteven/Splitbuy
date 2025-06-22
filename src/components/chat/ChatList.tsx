@@ -62,7 +62,7 @@ export function ChatList({ onSelectChat }: ChatListProps) {
         });
 
         return () => unsubscribe();
-    }, [authUser]);
+    }, [authUser?.uid]);
 
     const addEmailInput = () => {
         setNewChatUserEmails([...newChatUserEmails, ""]);

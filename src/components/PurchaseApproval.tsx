@@ -196,22 +196,29 @@ export function PurchaseApproval({
 
       {/* Full Size Proof Modal */}
       {viewingProof && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Proof of Purchase</h3>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setViewingProof(false)}
+        >
+          <div 
+            className="bg-white dark:bg-gray-900 rounded-lg max-w-4xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Proof of Purchase</h3>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => setViewingProof(false)}
+                className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
               >
-                ✕
+                <XCircle className="w-5 h-5" />
               </Button>
             </div>
             <div className="p-4">
               {isPdf ? (
                 <div className="text-center p-8">
-                  <p className="text-gray-600 mb-4">📄 PDF Receipt</p>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">📄 PDF Receipt</p>
                   <a 
                     href={purchaseRequest.organizerProof} 
                     target="_blank" 

@@ -55,16 +55,14 @@ export function ChatBox({ chatId }: ChatBoxProps) {
 
                     if (chatData.users) {
                         const userIds = chatData.users;
-                        const usersData: UserData = { ...users };
+                        const usersData: UserData = {};
                         for (const userId of userIds) {
-                            if (!usersData[userId]) {
-                                const profileDocRef = doc(db, "profiles", userId);
-                                const profileDoc = await getDoc(profileDocRef);
-                                if (profileDoc.exists()) {
-                                    const profileData = profileDoc.data();
-                                    if (profileData) {
-                                        usersData[userId] = profileData.name;
-                                    }
+                            const profileDocRef = doc(db, "profiles", userId);
+                            const profileDoc = await getDoc(profileDocRef);
+                            if (profileDoc.exists()) {
+                                const profileData = profileDoc.data();
+                                if (profileData) {
+                                    usersData[userId] = profileData.name;
                                 }
                             }
                         }
@@ -79,7 +77,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             });
             return () => unsubscribe();
         }
-    }, [chatId, users]);
+    }, [chatId]);
 
     const handleSendMessage = async () => {
         if (!authUser || !chatId || !newMessage.trim()) return;

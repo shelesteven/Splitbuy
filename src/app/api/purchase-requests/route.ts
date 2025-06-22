@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       deadline: new Date(deadline),
       message: message || "",
       status: "awaiting_organizer_proof", // awaiting_organizer_proof, awaiting_participant_approval, completed
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
       organizerProof: null, // Organizer uploads proof of purchase here
       organizerProofUploadedAt: null,
       participants: groupBuyData.participants
@@ -131,7 +131,7 @@ export async function PATCH(request: NextRequest) {
       updatedPurchaseRequest = {
         ...purchaseRequest,
         organizerProof: proofOfPurchase,
-        organizerProofUploadedAt: new Date().toISOString(),
+        organizerProofUploadedAt: new Date(),
         status: "awaiting_participant_approval",
         participants: purchaseRequest.participants.map((p: any) => ({
           ...p,
@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest) {
           return {
             ...p,
             status: "approved",
-            approvedAt: new Date().toISOString(),
+            approvedAt: new Date(),
           };
         }
         return p;
@@ -175,7 +175,7 @@ export async function PATCH(request: NextRequest) {
           return {
             ...p,
             status: "rejected",
-            approvedAt: new Date().toISOString(),
+            approvedAt: new Date(),
           };
         }
         return p;
