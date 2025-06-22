@@ -176,7 +176,7 @@ export default function CreateListingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleUrlSubmit}>
+                  <form onSubmit={handleUrlSubmit} className="flex flex-col gap-4">
                     <Input
                       type="url"
                       placeholder="https://example.com/product/widget-pro"
@@ -189,7 +189,7 @@ export default function CreateListingPage() {
                     {error && (
                       <p className="text-red-500 text-sm mt-2">{error}</p>
                     )}
-                    <Button type="submit" className="w-full mt-4">
+                    <Button type="submit" className="w-full">
                       Analyze
                     </Button>
                   </form>

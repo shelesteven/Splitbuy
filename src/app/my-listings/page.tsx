@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthUserContext";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,18 +83,29 @@ export default function MyListingsPage() {
       const listingsSnapshot = await getDocs(listingsQuery);
       setMyListings(listingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
 
-      // Fetch group buys the user is a part of
-      const groupBuysQuery = query(collection(db, "groupBuys"), where("participants", "array-contains", authUser.uid));
+      // Fetch all group buys and filter on the client
+      const groupBuysQuery = query(collection(db, "groupBuys"));
       const groupBuysSnapshot = await getDocs(groupBuysQuery);
       
       const groupBuyListingsPromises = groupBuysSnapshot.docs
-        .filter(doc => doc.data().organizer !== authUser.uid) // Exclude buys they organized
-        .map(async (doc) => {
-          const groupBuy = { id: doc.id, ...doc.data() };
-          const listingDoc = await getDocs(query(collection(db, "listings"), where("id", "==", groupBuy.id)));
-          if (!listingDoc.empty) {
-              const listingData = listingDoc.docs[0].data();
-              return { ...groupBuy, ...listingData };
+        .filter(groupDoc => {
+            const data = groupDoc.data();
+            const participants = data.participants || [];
+            // Find if the user is a participant but not the organizer
+            return data.organizer !== authUser.uid && participants.some((p: { userId: string }) => p.userId === authUser.uid);
+        })
+        .map(async (groupDoc) => {
+          const groupBuyData = groupDoc.data();
+          const listingId = groupBuyData.listingId;
+
+          if (!listingId) return null;
+          
+          const listingDocRef = doc(db, "listings", listingId);
+          const listingDocSnap = await getDoc(listingDocRef);
+          
+          if (listingDocSnap.exists()) {
+              const listingData = listingDocSnap.data();
+              return { ...listingData, id: listingId } as Product;
           }
           return null;
         });

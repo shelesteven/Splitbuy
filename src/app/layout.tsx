@@ -4,7 +4,7 @@ import "./globals.css";
 import { ReactNode, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserCircle, MessageCircle, LayoutDashboard } from "lucide-react";
+import { UserCircle, MessageCircle, LayoutDashboard, List } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
@@ -64,23 +64,31 @@ function SiteHeader() {
                 {!loading && authUser ? (
                     <div className="flex items-center gap-4">
                         <div className="flex items-center">
-                            <Link href="/dashboard">
+                            <Link href="/my-listings" title="My Listings">
+                                <List className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
+                            </Link>
+                        </div>
+                        <div className="flex items-center">
+                            <Link href="/dashboard" title="Dashboard">
                                 <LayoutDashboard className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
                             </Link>
                         </div>
                         <div className="flex items-center">
-                            <Link href="/chats">
+                            <Link href="/chats" title="Chats">
                                 <MessageCircle className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
                             </Link>
                         </div>
                         <div className="relative" ref={dropdownRef}>
-                            <button onClick={() => setOpen(!open)} className="flex items-center cursor-pointer rounded-full transition">
+                            <button onClick={() => setOpen(!open)} className="flex items-center cursor-pointer rounded-full transition" title="Profile">
                                 <UserCircle className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
                             </button>
 
                             {open && (
                                 <div className="absolute right-0 mt-2 w-48 border rounded-md border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                                    <Link href={`/profile/${authUser.uid}`} className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                    <Link href="/my-account" className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                        My Account
+                                    </Link>
+                                    <Link href={`/profile/${authUser.uid}`} className="block px-4 py-2 bg-white dark:bg-black hover:bg-gray-100 dark:hover:bg-gray-800">
                                         Profile
                                     </Link>
                                     <button

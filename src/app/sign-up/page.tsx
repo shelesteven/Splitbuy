@@ -67,6 +67,7 @@ export default function SignUpPage() {
     await setDoc(userRef, {
       uid: user.uid,
       email: user.email,
+      name: name,
       createdAt: new Date().toISOString(),
       hasPaymentMethod: false, // Track if user has added credit card
       // Other private fields like billing info, payment methods will be added here

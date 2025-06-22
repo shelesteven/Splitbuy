@@ -6,6 +6,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Card } from "@/components/ui/card";
 import { PageContainer } from "@/components/PageContainer";
+import { toast } from "sonner";
 import countries from "i18n-iso-countries";
 import enLocale from "i18n-iso-countries/langs/en.json";
 
@@ -130,7 +131,7 @@ export default function MyProfilePage() {
       { merge: true }
     );
     setSaving(false);
-    alert("✅ Addresses saved!");
+    toast.success("Addresses saved!");
   };
 
   if (loading || fetching) {
@@ -157,11 +158,11 @@ export default function MyProfilePage() {
             placeholder="Start typing address..."
           />
           {resSuggestions.length > 0 && (
-            <ul className="absolute z-10 bg-white border rounded mt-1 w-full max-h-48 overflow-y-auto">
+            <ul className="absolute z-10 bg-white dark:bg-gray-800 border rounded mt-1 w-full max-h-48 overflow-y-auto">
               {resSuggestions.map((sug, i) => (
                 <li
                   key={i}
-                  className="p-2 hover:bg-gray-100 cursor-pointer"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                   onClick={() => handleSuggestionSelect(sug, true)}
                 >
                   {sug.place_name}
@@ -194,11 +195,11 @@ export default function MyProfilePage() {
               placeholder="Start typing pickup address..."
             />
             {pickupSuggestions.length > 0 && (
-              <ul className="absolute z-10 bg-white border rounded mt-1 w-full max-h-48 overflow-y-auto">
+              <ul className="absolute z-10 bg-white dark:bg-gray-800 border rounded mt-1 w-full max-h-48 overflow-y-auto">
                 {pickupSuggestions.map((sug, i) => (
                   <li
                     key={i}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                     onClick={() => handleSuggestionSelect(sug, false)}
                   >
                     {sug.place_name}
@@ -211,7 +212,7 @@ export default function MyProfilePage() {
 
         <button
           onClick={saveAddresses}
-          className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
+          className="cursor-pointer w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
           disabled={!resAddress || (!sameAsRes && !pickupAddress) || saving}
         >
           {saving ? "Saving..." : "Save Addresses"}
