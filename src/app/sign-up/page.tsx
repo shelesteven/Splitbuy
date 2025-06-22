@@ -57,12 +57,23 @@ export default function SignUpPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const saveUserToFirestore = async (user: any, name: string) => {
+    // Private user data (sensitive information)
     const userRef = doc(db, "users", user.uid);
     await setDoc(userRef, {
       uid: user.uid,
-      name: name,
       email: user.email,
       createdAt: new Date().toISOString(),
+      hasPaymentMethod: false, // Track if user has added credit card
+      // Other private fields like billing info, payment methods will be added here
+    });
+
+    // Public profile data (visible to other users)
+    const profileRef = doc(db, "profiles", user.uid);
+    await setDoc(profileRef, {
+      uid: user.uid,
+      name: name,
+      createdAt: new Date().toISOString(),
+      // Public fields like display name, avatar, etc.
     });
   };
 
@@ -181,3 +192,4 @@ export default function SignUpPage() {
     </PageContainer>
   );
 }
+

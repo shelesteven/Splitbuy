@@ -134,6 +134,7 @@ function CreditCardForm() {
       billingName,
       billingEmail,
       billingAddress: address,
+      hasPaymentMethod: true,
     }, { merge: true });
 
     setStatus('✅ Card and billing address saved!');

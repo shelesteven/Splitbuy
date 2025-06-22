@@ -45,12 +45,12 @@ export function ChatBox({ chatId }: ChatBoxProps) {
                         const usersData: UserData = { ...users };
                         for (const userId of userIds) {
                             if (!usersData[userId]) {
-                                const userDocRef = doc(db, "users", userId);
-                                const userDoc = await getDoc(userDocRef);
-                                if (userDoc.exists()) {
-                                    const userData = userDoc.data();
-                                    if (userData) {
-                                        usersData[userId] = userData.name;
+                                const profileDocRef = doc(db, "profiles", userId);
+                                const profileDoc = await getDoc(profileDocRef);
+                                if (profileDoc.exists()) {
+                                    const profileData = profileDoc.data();
+                                    if (profileData) {
+                                        usersData[userId] = profileData.name;
                                     }
                                 }
                             }
@@ -104,14 +104,36 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             </div>
             <div className="flex-grow min-h-0 overflow-auto">
                 <div className="p-4">
-                    {chat.messages.map((message: any, index: number) => (
-                        <div key={index} className={`flex mb-2 ${message.senderId === authUser?.uid ? "justify-end" : "justify-start"}`}>
-                            <div className={`p-2 rounded-lg ${message.senderId === authUser?.uid ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-800"}`}>
-                                {message.senderId !== authUser?.uid && <p className="text-sm font-semibold">{users[message.senderId] || "Unknown User"}</p>}
-                                <p>{message.text}</p>
+                    {chat.messages.map((message: any, index: number) => {
+                        const isSystemMessage = message.senderId === "system";
+                        const isOwnMessage = message.senderId === authUser?.uid;
+                        
+                        if (isSystemMessage) {
+                            return (
+                                <div key={index} className="flex justify-center mb-2">
+                                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
+                                        {message.text}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        
+                        return (
+                            <div key={index} className={`flex mb-2 ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+                                <div className={`p-2 rounded-lg max-w-xs ${isOwnMessage ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-800"}`}>
+                                    {!isOwnMessage && (
+                                        <p className="text-sm font-semibold mb-1">
+                                            {users[message.senderId] || "Unknown User"}
+                                        </p>
+                                    )}
+                                    <p className="break-words">{message.text}</p>
+                                    <p className="text-xs opacity-70 mt-1">
+                                        {new Date(message.timestamp).toLocaleTimeString()}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                     <div ref={messagesEndRef} />
                 </div>
             </div>

@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       name: sanitizedName,
       numberOfPeople,
       createdBy: userId,
-      createdAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
       coordinates,
     };
 
@@ -122,7 +122,41 @@ export async function POST(request: Request) {
     // 2. Get the ID of the new listing
     const newListingId = listingRef.id;
 
-    // 3. Update the user's document to include the new listing ID
+    // 3. Create a chat room for this group buy
+    const chatRef = await db.collection("chats").doc(newListingId).set({
+      listingId: newListingId,
+      organizer: userId,
+      users: [userId], // Start with just the organizer
+      messages: [
+        {
+          senderId: "system",
+          text: `Welcome to the group buy for ${sanitizedName}! Use this chat to discuss details with other participants.`,
+          timestamp: new Date().toISOString(),
+        }
+      ],
+      createdAt: new Date().toISOString(),
+    });
+
+    // 4. Create group buy management document
+    await db.collection("groupBuys").doc(newListingId).set({
+      listingId: newListingId,
+      organizer: userId,
+      maxParticipants: numberOfPeople,
+      currentParticipants: 1, // Just the organizer
+      participants: [
+        {
+          userId: userId,
+          status: "confirmed",
+          joinedAt: new Date().toISOString(),
+        }
+      ],
+      joinRequests: [], // Pending requests to join
+      status: "open", // open, full, purchasing, completed
+      purchaseRequest: null, // Will store purchase request when organizer initiates
+      createdAt: new Date().toISOString(),
+    });
+
+    // 5. Update the user's document to include the new listing ID
     const userRef = db.collection("users").doc(userId);
     await userRef.update({
       listings: FieldValue.arrayUnion(newListingId),

@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MapPin, Search } from "lucide-react";
+import { RequirePaymentMethod } from "@/components/RequirePaymentMethod";
 
 type Product = {
   id: string;
@@ -648,181 +649,183 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="px-4 sm:px-8 lg:px-16 py-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <Link href="/create-listing">
-          <Button
-            variant="outline"
-            className="cursor-pointer flex-1 w-full md-basis-[20%]"
-          >
-            Create a listing
-          </Button>
-        </Link>
-        <Input
-          placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 w-full md:basis-[50%]"
-        />
-
-        {/* Location filter with map */}
-        <Popover>
-          <PopoverTrigger asChild>
+    <RequirePaymentMethod>
+      <div className="px-4 sm:px-8 lg:px-16 py-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <Link href="/create-listing">
             <Button
               variant="outline"
-              className="min-w-[240px] md:basis-[30%] cursor-pointer justify-start relative overflow-hidden"
+              className="cursor-pointer flex-1 w-full md-basis-[20%]"
             >
-              <MapPin className="w-4 h-4 mr-2" />
-              <div className="flex flex-col items-start pr-5 overflow-hidden">
-                <span className="text-sm truncate w-full">
-                  {isGettingLocation
-                    ? "Getting your location..."
-                    : locationFilter.address}
-                </span>
-                <span className="text-xs text-gray-500">
-                  Within {locationFilter.radius} km
-                </span>
-              </div>
-              {isGettingLocation && (
-                <div className="absolute right-2 w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-              )}
+              Create a listing
             </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-96 p-0" align="end">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">Choose location</h3>
+          </Link>
+          <Input
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 w-full md:basis-[50%]"
+          />
 
-                {/* Location permission status and retry button */}
-                {locationPermission === "denied" && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={getCurrentLocation}
-                    className="text-xs"
-                  >
-                    📍 Use my location
-                  </Button>
+          {/* Location filter with map */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="min-w-[240px] md:basis-[30%] cursor-pointer justify-start relative overflow-hidden"
+              >
+                <MapPin className="w-4 h-4 mr-2" />
+                <div className="flex flex-col items-start pr-5 overflow-hidden">
+                  <span className="text-sm truncate w-full">
+                    {isGettingLocation
+                      ? "Getting your location..."
+                      : locationFilter.address}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Within {locationFilter.radius} km
+                  </span>
+                </div>
+                {isGettingLocation && (
+                  <div className="absolute right-2 w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
                 )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 p-0" align="end">
+              <div className="p-4 border-b">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">Choose location</h3>
 
-                {locationPermission === "granted" && (
-                  <div className="flex items-center text-green-600 text-xs">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                    Using your location
+                  {/* Location permission status and retry button */}
+                  {locationPermission === "denied" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={getCurrentLocation}
+                      className="text-xs"
+                    >
+                      📍 Use my location
+                    </Button>
+                  )}
+
+                  {locationPermission === "granted" && (
+                    <div className="flex items-center text-green-600 text-xs">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                      Using your location
+                    </div>
+                  )}
+
+                  {locationPermission === "loading" && (
+                    <div className="flex items-center text-blue-600 text-xs">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-1 animate-pulse"></div>
+                      Getting location...
+                    </div>
+                  )}
+                </div>
+
+                {/* Location permission explanation */}
+                {locationPermission === "prompt" && (
+                  <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs text-blue-700 dark:text-blue-300">
+                    💡 Allow location access for personalized results near you
                   </div>
                 )}
 
-                {locationPermission === "loading" && (
-                  <div className="flex items-center text-blue-600 text-xs">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-1 animate-pulse"></div>
-                    Getting location...
+                {locationPermission === "denied" && (
+                  <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900 rounded text-xs text-yellow-700 dark:text-yellow-300">
+                    📍 Location access denied. You can search for locations
+                    manually or enable location in your browser settings.
                   </div>
                 )}
               </div>
 
-              {/* Location permission explanation */}
-              {locationPermission === "prompt" && (
-                <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs text-blue-700 dark:text-blue-300">
-                  💡 Allow location access for personalized results near you
-                </div>
-              )}
-
-              {locationPermission === "denied" && (
-                <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900 rounded text-xs text-yellow-700 dark:text-yellow-300">
-                  📍 Location access denied. You can search for locations
-                  manually or enable location in your browser settings.
-                </div>
-              )}
-            </div>
-
-            {/* Mapbox map */}
-            <div className="p-4">
-              <MapboxMap
-                center={locationFilter.center}
-                radius={locationFilter.radius}
-                products={allProducts}
-                onLocationChange={handleLocationChange}
-                onRadiusChange={handleRadiusChange}
-                onAddressChange={handleAddressChange}
-                onCurrentLocationRequest={getCurrentLocation}
-              />
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {/* Product grid */}
-      <section>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-semibold">Products</h2>
-          <span className="text-sm text-gray-500">
-            {filteredProducts.length} item
-            {filteredProducts.length !== 1 ? "s" : ""} found
-          </span>
+              {/* Mapbox map */}
+              <div className="p-4">
+                <MapboxMap
+                  center={locationFilter.center}
+                  radius={locationFilter.radius}
+                  products={allProducts}
+                  onLocationChange={handleLocationChange}
+                  onRadiusChange={handleRadiusChange}
+                  onAddressChange={handleAddressChange}
+                  onCurrentLocationRequest={getCurrentLocation}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12 flex flex-col">
-            <p className="text-gray-500 mb-4">
-              No products found in your search area.
-            </p>
-            <Link href="/create-listing">
-              <Button
-                className="cursor-pointer w-auto max-w-xs self-center"
-                variant="outline"
-              >
-                Create a listing with your product instead?
-              </Button>
-            </Link>
-            <Button
-              className="cursor-pointer w-auto max-w-xs mt-2 self-center"
-              variant="outline"
-              onClick={() => {
-                setSearch("");
-                setLocationFilter((prev) => ({ ...prev, radius: 50 }));
-              }}
-            >
-              Expand search area
-            </Button>{" "}
+
+        {/* Product grid */}
+        <section>
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-semibold">Products</h2>
+            <span className="text-sm text-gray-500">
+              {filteredProducts.length} item
+              {filteredProducts.length !== 1 ? "s" : ""} found
+            </span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
-              <Link href={`/group_buys/${product.id}`} key={product.id}>
-                <Card
-                  className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full"
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12 flex flex-col">
+              <p className="text-gray-500 mb-4">
+                No products found in your search area.
+              </p>
+              <Link href="/create-listing">
+                <Button
+                  className="cursor-pointer w-auto max-w-xs self-center"
+                  variant="outline"
                 >
-                  <div className="relative">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-48 object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                      {product.description}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-green-600">
-                          {product.discountedPrice}
-                        </span>
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400 line-through">
-                          {product.price}
+                  Create a listing with your product instead?
+                </Button>
+              </Link>
+              <Button
+                className="cursor-pointer w-auto max-w-xs mt-2 self-center"
+                variant="outline"
+                onClick={() => {
+                  setSearch("");
+                  setLocationFilter((prev) => ({ ...prev, radius: 50 }));
+                }}
+              >
+                Expand search area
+              </Button>{" "}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProducts.map((product) => (
+                <Link href={`/group_buys/${product.id}`} key={product.id}>
+                  <Card
+                    className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full"
+                  >
+                    <div className="relative">
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        {product.description}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-green-600">
+                            {product.discountedPrice}
+                          </span>
+                          <span className="text-sm text-neutral-500 dark:text-neutral-400 line-through">
+                            {product.price}
+                          </span>
+                        </div>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                          {product.coordinates ? `${product.distance.toFixed(1)} km away` : "Location unavailable"}
                         </span>
                       </div>
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {product.coordinates ? `${product.distance.toFixed(1)} km away` : "Location unavailable"}
-                      </span>
                     </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </RequirePaymentMethod>
   );
 }
