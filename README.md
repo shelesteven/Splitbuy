@@ -39,6 +39,9 @@ This project leverages a modern, full-stack tech stack for a responsive and robu
 *   **Backend & Database:** [Firebase](https://firebase.google.com/) (Firestore, Firebase Authentication)
 *   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
 *   **UI Components:** [Shadcn/UI](https://ui.shadcn.com/)
+*   **Form Management:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
+*   **UI/UX:** [Lucide React](https://lucide.dev/) for icons, [Sonner](https://sonner.emilkowal.ski/) for toasts.
+*   **Web Scraping:** [Groq](https://groq.com/) for AI-powered content extraction.
 *   **APIs:** [Mapbox API](https://www.mapbox.com/) for geocoding
 
 ---
@@ -75,8 +78,11 @@ To get a local copy up and running, follow these simple steps.
 
     ```env
     # Firebase Service Account Key (get this from your Firebase project settings)
-    # This should be a JSON object on a single line
-    FIREBASE_SERVICE_ACCOUNT_KEY='{"type": "service_account", "project_id": "...", ...}'
+    # The entire JSON key should be on a single line.
+    FIREBASE_SERVICE_ACCOUNT_KEY='{"type": "service_account", "project_id": "...", "private_key_id": "...", "private_key": "...", "client_email": "...", "client_id": "...", "auth_uri": "...", "token_uri": "...", "auth_provider_x509_cert_url": "...", "client_x509_cert_url": "..."}'
+
+    # Groq API Key for web scraping
+    GROQ_API_KEY='gsk_...'
 
     # Your public Mapbox Access Token
     NEXT_PUBLIC_MAPBOX_TOKEN='pk.your_mapbox_token_here'
@@ -88,6 +94,7 @@ To get a local copy up and running, follow these simple steps.
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
     NEXT_PUBLIC_FIREBASE_APP_ID="1:..."
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-..." # Optional, for Google Analytics
     ```
 
 ### Usage
