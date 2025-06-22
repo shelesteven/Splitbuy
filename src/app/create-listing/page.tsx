@@ -127,6 +127,7 @@ export default function CreateListingPage() {
         body: JSON.stringify({
           token: listingData.token,
           name: listingData.name,
+          url: listingData.url,
           numberOfPeople: numberOfPeople[0],
           userId: authUser.uid,
         }),

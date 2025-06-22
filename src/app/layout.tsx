@@ -1,10 +1,10 @@
 "use client";
 
 import "./globals.css";
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { UserCircle } from "lucide-react";
+import { UserCircle, MessageCircle, LayoutDashboard } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
@@ -34,6 +34,25 @@ function SiteHeader() {
     const { authUser, loading, signOut } = useAuth();
     const router = useRouter();
     const [open, setOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        }
+
+        if (open) {
+            document.addEventListener("mousedown", handleClickOutside);
+        } else {
+            document.removeEventListener("mousedown", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [open]);
 
     return (
         <header className="sticky top-0 z-50 w-full bg-neutral-100 dark:bg-neutral-900 backdrop-blur-sm shadow-md">
@@ -43,26 +62,38 @@ function SiteHeader() {
                 </Link>
 
                 {!loading && authUser ? (
-                    <div className="relative">
-                        <button onClick={() => setOpen(!open)} className="cursor-pointer rounded-full p-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-950 dark:hover-bg-gray-900 transition">
-                            <UserCircle className="w-6 h-6" />
-                        </button>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center">
+                            <Link href="/dashboard">
+                                <LayoutDashboard className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
+                            </Link>
+                        </div>
+                        <div className="flex items-center">
+                            <Link href="/chats">
+                                <MessageCircle className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
+                            </Link>
+                        </div>
+                        <div className="relative" ref={dropdownRef}>
+                            <button onClick={() => setOpen(!open)} className="flex items-center cursor-pointer rounded-full transition">
+                                <UserCircle className="w-6 h-6 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors" />
+                            </button>
 
-                        {open && (
-                            <div className="absolute right-0 mt-2 w-48 border rounded-md border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                                <Link href={`/profile/${authUser.uid}`} className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                                    Profile
-                                </Link>
-                                <button
-                                    className="cursor-pointer w-full text-left px-4 py-2 bg-white dark:bg-black rounded-b-md hover:bg-gray-100 dark:hover:bg-gray-800"
-                                    onClick={() => {
-                                        signOut();
-                                        router.push("/sign-in");
-                                    }}>
-                                    Logout
-                                </button>
-                            </div>
-                        )}
+                            {open && (
+                                <div className="absolute right-0 mt-2 w-48 border rounded-md border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                                    <Link href={`/profile/${authUser.uid}`} className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                        Profile
+                                    </Link>
+                                    <button
+                                        className="cursor-pointer w-full text-left px-4 py-2 bg-white dark:bg-black rounded-b-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        onClick={() => {
+                                            signOut();
+                                            router.push("/sign-in");
+                                        }}>
+                                        Logout
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="flex items-center space-x-3">
