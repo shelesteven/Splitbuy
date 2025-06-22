@@ -56,7 +56,7 @@ export default function Home() {
       if (!snapshot.empty) {
         router.push("/sign-in");
       } else {
-        toast("No account found. Redirecting to sign-up.");
+        toast.info("No account found. Redirecting to sign-up.");
         router.push(`/sign-up?email=${encodeURIComponent(data.email)}`);
       }
     } catch (error) {
