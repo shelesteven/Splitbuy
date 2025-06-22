@@ -50,6 +50,8 @@ export async function POST(request: NextRequest) {
         .map((p: any) => ({
           userId: p.userId,
           status: "awaiting_organizer_proof", // awaiting_organizer_proof, approved, rejected
+          paid: false, // Track payment status
+          paidAt: null,
           approvedAt: null,
         })),
     };
