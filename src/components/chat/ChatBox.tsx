@@ -117,7 +117,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             </div>
             <div className="px-4 pt-4 border-t flex-shrink-0">
                 <div className="flex gap-2">
-                    <Input type="text" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} />
+                    <Input type="text" placeholder="Type a message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendMessage()} />
                     <Button onClick={handleSendMessage}>Send</Button>
                 </div>
             </div>
