@@ -1,74 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
+import { doc, runTransaction } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
-    const { reviewedUserId, groupBuyId, reviewerId, rating, comment } = await request.json();
+    const { groupBuyId, organizerId, reviewerId, rating, comment } = await request.json();
 
-    if (!reviewedUserId || !groupBuyId || !reviewerId || !rating) {
+    if (!groupBuyId || !organizerId || !reviewerId || !rating) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-    
-    if (rating < 1 || rating > 5) {
-      return NextResponse.json({ error: 'Rating must be between 1 and 5' }, { status: 400 });
     }
 
     await runTransaction(db, async (transaction) => {
-      const profileRef = doc(db, 'profiles', reviewedUserId);
-      const groupBuyRef = doc(db, 'group_buys', groupBuyId);
+      const organizerProfileRef = doc(db, 'profiles', organizerId);
+      const groupBuyRef = doc(db, 'groupBuys', groupBuyId);
 
-      const [profileSnap, groupBuySnap] = await Promise.all([
-        transaction.get(profileRef),
-        transaction.get(groupBuyRef)
-      ]);
-
-      if (!profileSnap.exists()) {
-        throw new Error('Profile not found');
+      // 1. Get the organizer's profile
+      const organizerProfileDoc = await transaction.get(organizerProfileRef);
+      if (!organizerProfileDoc.exists()) {
+        throw new Error('Organizer profile not found.');
       }
-      
-      if (!groupBuySnap.exists()) {
-        throw new Error('Group buy not found');
+      const organizerData = organizerProfileDoc.data();
+
+      // 2. Get the group buy document
+      const groupBuyDoc = await transaction.get(groupBuyRef);
+      if (!groupBuyDoc.exists()) {
+          throw new Error('Group buy not found.');
+      }
+      const groupBuyData = groupBuyDoc.data();
+
+      // 3. Check if user has already reviewed
+      if (groupBuyData.purchaseRequest?.reviewedBy?.includes(reviewerId)) {
+        throw new Error('User has already reviewed this group buy.');
       }
 
-      const profileData = profileSnap.data();
-      const groupBuyData = groupBuySnap.data();
-
-      // Ensure user hasn't already reviewed
-      const existingReviews = groupBuyData.reviews || {};
-      if (existingReviews[reviewerId]) {
-        throw new Error('You have already reviewed this user for this group buy.');
-      }
-      
-      // Update profile with new review
+      // 4. Update organizer's profile with new review and stats
       const newReview = {
-        rating,
-        comment,
         reviewerId,
+        rating,
+        comment: comment || '',
+        createdAt: new Date(),
         groupBuyId,
-        createdAt: serverTimestamp(),
       };
 
-      const newTotalRating = (profileData.totalRating || 0) + rating;
-      const newReviewCount = (profileData.reviewCount || 0) + 1;
+      const newTotalRating = (organizerData.totalRating || 0) + rating;
+      const newReviewCount = (organizerData.reviewCount || 0) + 1;
+      const newReviewRating = newTotalRating / newReviewCount;
 
-      transaction.update(profileRef, {
-        reviews: [...(profileData.reviews || []), newReview],
+      transaction.update(organizerProfileRef, {
         totalRating: newTotalRating,
         reviewCount: newReviewCount,
+        reviewRating: newReviewRating,
+        completedGroupBuys: (organizerData.completedGroupBuys || 0) + 1,
+        reviews: [...(organizerData.reviews || []), newReview],
       });
 
-      // Mark that the user has been reviewed in the group buy
+      // 5. Mark the group buy as reviewed by this user
       transaction.update(groupBuyRef, {
-        [`reviews.${reviewerId}`]: true,
+        'purchaseRequest.reviewedBy': [...(groupBuyData.purchaseRequest?.reviewedBy || []), reviewerId],
       });
     });
 
-    return NextResponse.json({ message: 'Review submitted successfully' }, { status: 200 });
-
-  } catch (error: unknown) {
+    return NextResponse.json({ success: true });
+  } catch (error) {
     console.error('Error submitting review:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 } 

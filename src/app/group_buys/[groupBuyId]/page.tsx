@@ -13,11 +13,10 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, Timestamp } from "firebase/firestore";
 import { RequirePaymentMethod } from "@/components/RequirePaymentMethod";
 import { PurchaseRequestForm } from "@/components/PurchaseRequestForm";
-import { PurchaseProofUpload } from "@/components/PaymentUpload";
+import { PurchaseProofUpload } from "@/components/PurchaseProofUpload";
 import { PurchaseApproval } from "@/components/PurchaseApproval";
-import { PaymentManagement } from "@/components/PaymentManagement";
 import { toast } from "sonner";
-import { type } from "os";
+import { ReviewForm } from "@/components/ReviewForm";
 
 interface Participant {
   userId: string;
@@ -36,15 +35,19 @@ interface PurchaseRequest {
   amount: number;
   deadline: Date;
   message: string;
-  status: 'awaiting_organizer_proof' | 'awaiting_participant_approval' | 'completed';
+  status: 'awaiting_payments' | 'ready_for_purchase' | 'awaiting_proof_approval' | 'completed';
   createdAt: Timestamp;
   organizerProof?: string | null;
   organizerProofUploadedAt?: Timestamp | null;
   participants: {
     userId: string;
-    status: 'awaiting_organizer_proof' | 'awaiting_approval' | 'approved' | 'rejected';
-    approvedAt?: Timestamp;
+    paid: boolean;
+    paymentProof: string | null;
+    paidAt: Date | null;
+    status: 'unpaid' | 'paid' | 'awaiting_approval' | 'approved' | 'rejected';
+    approvedAt?: Date;
   }[];
+  reviewedBy?: string[];
 }
 
 interface GroupBuy {
@@ -69,6 +72,7 @@ interface Product {
 
 interface UserProfile {
     name: string;
+    photoURL?: string;
 }
 
 // Fix protocol-relative URLs to absolute URLs
@@ -89,6 +93,7 @@ export default function GroupBuyPage() {
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   
   const groupBuyId = Array.isArray(params.groupBuyId) ? params.groupBuyId[0] : params.groupBuyId;
 
@@ -255,6 +260,35 @@ export default function GroupBuyPage() {
     }
   };
 
+  const handlePayNow = async () => {
+    if (!authUser || !groupBuyId) return;
+    setIsPaying(true);
+    try {
+      const response = await fetch('/api/purchase-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groupBuyId,
+          userId: authUser.uid,
+          action: 'submit_payment',
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Payment failed.');
+      }
+
+      toast.success('Payment successful!');
+      window.location.reload();
+    } catch (error) {
+      console.error('Payment Error:', error);
+      toast.error(error instanceof Error ? error.message : 'An error occurred during payment.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -377,22 +411,22 @@ export default function GroupBuyPage() {
               />
             )}
 
-            {/* Purchase Proof Upload (organizer during purchasing - awaiting proof) */}
-            {userStatus === 'organizer' && groupBuy.status === 'purchasing' && groupBuy.purchaseRequest && 
-             groupBuy.purchaseRequest.status === 'awaiting_organizer_proof' && (
+            {/* Purchase Proof Upload (organizer during purchasing) */}
+            {userStatus === 'organizer' && groupBuy.status === 'purchasing' && groupBuy.purchaseRequest && (
               <PurchaseProofUpload
                 groupBuyId={groupBuyId}
                 organizerId={authUser!.uid}
-                amount={groupBuy.purchaseRequest.amount}
-                deadline={new Date(groupBuy.purchaseRequest.deadline)}
                 currentProof={groupBuy.purchaseRequest.organizerProof}
+                purchaseStatus={groupBuy.purchaseRequest.status}
+                participants={groupBuy.purchaseRequest.participants}
+                userProfiles={userProfiles}
                 onUploadSuccess={() => window.location.reload()}
               />
             )}
 
             {/* Payment Management (organizer during purchasing - after proof uploaded) */}
             {userStatus === 'organizer' && groupBuy.status === 'purchasing' && groupBuy.purchaseRequest && 
-             groupBuy.purchaseRequest.status !== 'awaiting_organizer_proof' && (
+             groupBuy.purchaseRequest.status === 'awaiting_proof_approval' && (
               <Card>
                 <CardHeader>
                   <CardTitle>📊 Participant Approval Status</CardTitle>
@@ -431,9 +465,9 @@ export default function GroupBuyPage() {
 
             {/* Purchase Approval (participants during purchasing) */}
             {userStatus === 'participant' && groupBuy.status === 'purchasing' && groupBuy.purchaseRequest && 
-             groupBuy.purchaseRequest.organizerProof && (() => {
+             groupBuy.purchaseRequest.status === 'awaiting_proof_approval' && groupBuy.purchaseRequest.organizerProof && (() => {
               const participantStatus = groupBuy.purchaseRequest.participants.find(p => p.userId === authUser!.uid);
-              const validStatus = participantStatus?.status === 'awaiting_organizer_proof' ? 'awaiting_approval' : 
+              const validStatus = participantStatus?.status === 'awaiting_approval' ? 'awaiting_approval' : 
                                  (participantStatus?.status || 'awaiting_approval');
               return (
                 <PurchaseApproval
@@ -450,16 +484,81 @@ export default function GroupBuyPage() {
               );
             })()}
 
+            {/* Review Form for completed group buy */}
+            {userStatus === 'participant' &&
+              groupBuy.status === 'completed' &&
+              groupBuy.purchaseRequest &&
+              !groupBuy.purchaseRequest.reviewedBy?.includes(authUser!.uid) && (
+                <ReviewForm
+                  groupBuyId={groupBuyId}
+                  organizerId={groupBuy.organizer}
+                  reviewerId={authUser!.uid}
+                  onReviewSubmitted={() => window.location.reload()}
+                />
+            )}
+
+            {/* Payment Component for Participants */}
+            {userStatus === 'participant' &&
+              groupBuy.status === 'purchasing' &&
+              groupBuy.purchaseRequest &&
+              groupBuy.purchaseRequest.status === 'awaiting_payments' &&
+              (() => {
+                const participant = groupBuy.purchaseRequest!.participants.find(
+                  (p) => p.userId === authUser!.uid
+                );
+
+                if (participant?.paid) {
+                  return (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-green-600">
+                          ✅ Payment Submitted
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Your payment has been submitted. Waiting for other
+                          participants to pay.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+
+                return (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>💰 Submit Payment</CardTitle>
+                      <p className="text-sm text-muted-foreground pt-2">
+                        Please submit your payment of $
+                        {groupBuy.purchaseRequest!.amount.toFixed(2)} before the
+                        organizer can make the purchase.
+                      </p>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <Button
+                        onClick={handlePayNow}
+                        disabled={isPaying}
+                        className="w-full"
+                      >
+                        {isPaying ? 'Processing...' : `Pay $${groupBuy.purchaseRequest!.amount.toFixed(2)} Now`}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })()
+            }
+
             {/* Waiting for organizer proof */}
             {userStatus === 'participant' && groupBuy.status === 'purchasing' && groupBuy.purchaseRequest && 
-             !groupBuy.purchaseRequest.organizerProof && (
+             groupBuy.purchaseRequest.status === 'ready_for_purchase' && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-blue-600">⏳ Waiting for Purchase</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    The organizer is preparing to purchase the items. You&apos;ll be able to review and approve the purchase proof once it&apos;s uploaded.
+                    All participants have paid! The organizer is now making the purchase and will upload proof soon.
                   </p>
                 </CardContent>
               </Card>

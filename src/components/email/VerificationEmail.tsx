@@ -24,7 +24,7 @@ export const VerificationEmail = ({ url }: VerificationEmailProps) => (
           <Text style={title}>Splitbuy</Text>
           <Text style={text}>Hi there,</Text>
           <Text style={text}>
-            Welcome to Splitbuy! We&apos;re excited to have you on board. Please
+            Welcome to SplitBuy! We&apos;re excited to have you on board. Please
             click the button below to verify your email address and complete your
             registration.
           </Text>
@@ -35,7 +35,7 @@ export const VerificationEmail = ({ url }: VerificationEmailProps) => (
             If you didn&apos;t create an account, you can safely ignore this email.
           </Text>
           <Text style={text}>Thanks,</Text>
-          <Text style={text}>The Splitbuy Team</Text>
+          <Text style={text}>The SplitBuy Team</Text>
         </Section>
       </Container>
     </Body>

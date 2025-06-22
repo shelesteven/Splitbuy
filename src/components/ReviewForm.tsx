@@ -1,106 +1,97 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Star } from "lucide-react";
-import { useAuth } from "@/context/AuthUserContext";
-import { LoadingSpinner } from "./ui/loading";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star } from 'lucide-react';
+import { toast } from 'sonner';
 
-type ReviewFormProps = {
-  reviewedUserId: string;
+interface ReviewFormProps {
   groupBuyId: string;
+  organizerId: string;
+  reviewerId: string;
   onReviewSubmitted: () => void;
-};
+}
 
-export function ReviewForm({ reviewedUserId, groupBuyId, onReviewSubmitted }: ReviewFormProps) {
-  const { authUser } = useAuth();
+export function ReviewForm({ groupBuyId, organizerId, reviewerId, onReviewSubmitted }: ReviewFormProps) {
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!authUser || !authUser.uid) {
-      setError("You must be logged in to submit a review.");
-      return;
-    }
+  const handleSubmit = async () => {
     if (rating === 0) {
-      setError("Please select a rating.");
+      toast.error('Please select a rating.');
       return;
     }
-
     setIsSubmitting(true);
-    setError(null);
-
     try {
       const response = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reviewedUserId,
           groupBuyId,
-          reviewerId: authUser.uid,
+          organizerId,
+          reviewerId,
           rating,
           comment,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Failed to submit review.");
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to submit review.');
       }
-      
-      onReviewSubmitted();
-      setRating(0);
-      setComment("");
 
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred.");
-      }
+      toast.success('Review submitted successfully!');
+      onReviewSubmitted();
+    } catch (error) {
+      console.error(error);
+      toast.error(error instanceof Error ? error.message : 'An error occurred.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg">
-      <h3 className="font-semibold text-lg">Leave a Review</h3>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-        <div className="flex items-center">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              className={`h-8 w-8 cursor-pointer ${
-                rating >= star ? "text-yellow-400" : "text-gray-300"
-              }`}
-              fill={rating >= star ? "currentColor" : "none"}
-              onClick={() => setRating(star)}
-            />
-          ))}
+    <Card>
+      <CardHeader>
+        <CardTitle>Leave a Review for the Organizer</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">Rating</label>
+          <div className="flex items-center">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`h-8 w-8 cursor-pointer ${
+                  (hoverRating || rating) >= star ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+                fill={(hoverRating || rating) >= star ? 'currentColor' : 'none'}
+                onClick={() => setRating(star)}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-      <div>
-        <label htmlFor="comment" className="block text-sm font-medium text-gray-700 mb-1">
-          Comment (Optional)
-        </label>
-        <Textarea
-          id="comment"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          placeholder="Share your experience..."
-        />
-      </div>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button type="submit" disabled={isSubmitting || rating === 0}>
-        {isSubmitting ? <LoadingSpinner /> : "Submit Review"}
-      </Button>
-    </form>
+        <div>
+          <label htmlFor="comment" className="block text-sm font-medium text-muted-foreground mb-2">
+            Comment (optional)
+          </label>
+          <Textarea
+            id="comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="How was your experience with the organizer?"
+          />
+        </div>
+        <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full">
+          {isSubmitting ? 'Submitting...' : 'Submit Review'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 } 

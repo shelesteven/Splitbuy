@@ -139,8 +139,8 @@ export default function CreateListingPage() {
         throw new Error(data.error || "Failed to create listing.");
       }
 
-      // Redirect to dashboard or a success page
-      router.push("/dashboard");
+      // Redirect to the newly created group buy page
+      router.push(`/group_buys/${data.listingId}`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message);

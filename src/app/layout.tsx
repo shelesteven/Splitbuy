@@ -58,7 +58,7 @@ function SiteHeader() {
         <header className="sticky top-0 z-50 w-full bg-neutral-100 dark:bg-neutral-900 backdrop-blur-sm shadow-md">
             <nav className="mx-auto flex items-center justify-between px-6 md:px-16 py-4">
                 <Link href="/" className="text-2xl font-bold tracking-tight text-indigo-600 hover:text-indigo-700 transition-colors">
-                    Splitbuy
+                    SplitBuy
                 </Link>
 
                 {!loading && authUser ? (

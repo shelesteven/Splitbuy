@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc, getDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 
+interface Participant {
+  userId: string;
+  paid: boolean;
+  paymentProof: string | null;
+  paidAt: Date | null;
+  status: 'unpaid' | 'paid' | 'awaiting_approval' | 'approved' | 'rejected';
+  approvedAt: Date | null;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { groupBuyId, organizerId, amount, deadline, message } = await request.json();
@@ -13,8 +22,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("1");
-
     // Verify the user is the organizer
     const groupBuyDoc = await getDoc(doc(db, "groupBuys", groupBuyId));
     if (!groupBuyDoc.exists()) {
@@ -24,8 +31,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("1.5");
-
     const groupBuyData = groupBuyDoc.data();
     if (groupBuyData.organizer !== organizerId) {
       return NextResponse.json(
@@ -34,29 +39,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create purchase request
+    // Create purchase request with paid flags for each participant
     const purchaseRequest = {
       id: `pr_${Date.now()}`,
       organizerId,
       amount,
       deadline: new Date(deadline),
       message: message || "",
-      status: "awaiting_organizer_proof", // awaiting_organizer_proof, awaiting_participant_approval, completed
+      status: "awaiting_payments", // awaiting_payments, ready_for_purchase, awaiting_proof_approval, completed
       createdAt: serverTimestamp(),
-      organizerProof: null, // Organizer uploads proof of purchase here
+      organizerProof: null,
       organizerProofUploadedAt: null,
       participants: groupBuyData.participants
-        .filter((p: any) => p.userId !== organizerId) // Exclude organizer from participants list
-        .map((p: any) => ({
+        .filter((p: { userId: string }) => p.userId !== organizerId) // Exclude organizer from participants list
+        .map((p: { userId: string }) => ({
           userId: p.userId,
-          status: "awaiting_organizer_proof", // awaiting_organizer_proof, approved, rejected
           paid: false, // Track payment status
+          paymentProof: null, // Participant uploads payment proof
           paidAt: null,
+          status: "unpaid", // unpaid, paid, awaiting_approval, approved, rejected
           approvedAt: null,
         })),
     };
-
-    console.log("2");
 
     // Update group buy with purchase request and change status
     await updateDoc(doc(db, "groupBuys", groupBuyId), {
@@ -64,20 +68,16 @@ export async function POST(request: NextRequest) {
       status: "purchasing",
     });
 
-    console.log("3");
-
     // Add notification message to chat
     await updateDoc(doc(db, "chats", groupBuyId), {
       messages: arrayUnion({
         id: `msg_${Date.now()}`,
-        text: `🛒 Purchase request initiated! Organizer will buy the items and upload proof. Each participant will pay $${amount}. Purchase deadline: ${new Date(deadline).toLocaleDateString()}. ${message ? `Note: ${message}` : ''}`,
+        text: `💰 Payment collection started! Each participant needs to pay $${amount} before the organizer can make the purchase. Payment deadline: ${new Date(deadline).toLocaleDateString()}. ${message ? `Note: ${message}` : ''}`,
         senderId: "system",
         timestamp: new Date().toISOString(),
         type: "purchase_request",
       }),
     });
-
-    console.log("4");
 
     return NextResponse.json({ success: true, purchaseRequest });
   } catch (error) {
@@ -121,8 +121,39 @@ export async function PATCH(request: NextRequest) {
     let updatedPurchaseRequest = { ...purchaseRequest };
     let chatMessage = "";
 
-    if (action === "upload_organizer_proof") {
-      // Organizer uploads proof of purchase
+    if (action === "submit_payment") {
+      // Participant submits payment
+      const updatedParticipants = purchaseRequest.participants.map((p: Participant) => {
+        if (p.userId === userId) {
+          return {
+            ...p,
+            paid: true,
+            paymentProof: null,
+            paidAt: new Date(),
+            status: "paid"
+          };
+        }
+        return p;
+      });
+
+      updatedPurchaseRequest = {
+        ...purchaseRequest,
+        participants: updatedParticipants,
+      };
+
+      // Check if all participants have paid
+      const allPaid = updatedParticipants.every((p: Participant) => p.paid === true);
+      if (allPaid) {
+        updatedPurchaseRequest.status = "ready_for_purchase";
+        chatMessage = `✅ All participants have paid! Organizer can now make the purchase and upload proof.`;
+      } else {
+        const paidCount = updatedParticipants.filter((p: Participant) => p.paid).length;
+        const totalCount = updatedParticipants.length;
+        chatMessage = `💰 Payment received! ${paidCount}/${totalCount} participants have paid.`;
+      }
+
+    } else if (action === "upload_organizer_proof") {
+      // Organizer uploads proof of purchase (only after all participants have paid)
       if (groupBuyData.organizer !== userId) {
         return NextResponse.json(
           { error: "Only organizer can upload proof of purchase" },
@@ -130,22 +161,29 @@ export async function PATCH(request: NextRequest) {
         );
       }
 
+      if (purchaseRequest.status !== "ready_for_purchase") {
+        return NextResponse.json(
+          { error: "Cannot upload proof until all participants have paid" },
+          { status: 400 }
+        );
+      }
+
       updatedPurchaseRequest = {
         ...purchaseRequest,
         organizerProof: proofOfPurchase,
         organizerProofUploadedAt: new Date(),
-        status: "awaiting_participant_approval",
-        participants: purchaseRequest.participants.map((p: any) => ({
+        status: "awaiting_proof_approval",
+        participants: purchaseRequest.participants.map((p: Participant) => ({
           ...p,
           status: "awaiting_approval"
         }))
       };
 
-      chatMessage = `🛒 Organizer has uploaded proof of purchase! Please review and approve.`;
+      chatMessage = `🛒 Organizer has uploaded proof of purchase! Please review and confirm your items are included.`;
 
     } else if (action === "approve_purchase") {
       // Participant approves organizer's proof
-      const updatedParticipants = purchaseRequest.participants.map((p: any) => {
+      const updatedParticipants = purchaseRequest.participants.map((p: Participant) => {
         if (p.userId === userId) {
           return {
             ...p,
@@ -162,17 +200,19 @@ export async function PATCH(request: NextRequest) {
       };
 
       // Check if all participants have approved
-      const allApproved = updatedParticipants.every((p: any) => p.status === "approved");
+      const allApproved = updatedParticipants.every((p: Participant) => p.status === "approved");
       if (allApproved) {
         updatedPurchaseRequest.status = "completed";
-        chatMessage = `🎉 All participants have approved! Purchase completed successfully.`;
+        chatMessage = `🎉 All participants have confirmed! Purchase completed successfully.`;
       } else {
-        chatMessage = `✅ Participant approved the purchase`;
+        const approvedCount = updatedParticipants.filter((p: Participant) => p.status === "approved").length;
+        const totalCount = updatedParticipants.length;
+        chatMessage = `✅ Purchase confirmed! ${approvedCount}/${totalCount} participants have confirmed.`;
       }
 
     } else if (action === "reject_purchase") {
       // Participant rejects organizer's proof
-      const updatedParticipants = purchaseRequest.participants.map((p: any) => {
+      const updatedParticipants = purchaseRequest.participants.map((p: Participant) => {
         if (p.userId === userId) {
           return {
             ...p,
@@ -188,7 +228,7 @@ export async function PATCH(request: NextRequest) {
         participants: updatedParticipants,
       };
 
-      chatMessage = `❌ Participant rejected the purchase proof`;
+      chatMessage = `❌ Purchase proof rejected. Please contact the organizer.`;
     }
 
     // Update group buy status
@@ -202,7 +242,7 @@ export async function PATCH(request: NextRequest) {
       status: newGroupBuyStatus,
     });
 
-    // Add chat message
+    // Add chat message if there is one
     if (chatMessage) {
       await updateDoc(doc(db, "chats", groupBuyId), {
         messages: arrayUnion({

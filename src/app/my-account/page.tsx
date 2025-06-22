@@ -33,7 +33,7 @@ interface UserProfile {
   pickupAddress?: Address;
 }
 
-const getFieldFromContext = (context: any[], type: string) => {
+const getFieldFromContext = (context: { id: string, text: string }[], type: string) => {
   const item = context?.find((c) => c.id.startsWith(type));
   return item?.text || "";
 };
@@ -51,8 +51,8 @@ export default function MyProfilePage() {
 
   const [resInput, setResInput] = useState("");
   const [pickupInput, setPickupInput] = useState("");
-  const [resSuggestions, setResSuggestions] = useState<any[]>([]);
-  const [pickupSuggestions, setPickupSuggestions] = useState<any[]>([]);
+  const [resSuggestions, setResSuggestions] = useState<{ place_name: string; context: { id: string; text: string }[] }[]>([]);
+  const [pickupSuggestions, setPickupSuggestions] = useState<{ place_name: string; context: { id: string; text: string }[] }[]>([]);
   const [resAddress, setResAddress] = useState<Address | null>(null);
   const [pickupAddress, setPickupAddress] = useState<Address | null>(null);
   const [sameAsRes, setSameAsRes] = useState(true);
@@ -60,20 +60,38 @@ export default function MyProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!authUser?.uid) return;
-      const docRef = doc(db, "users", authUser.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data() as UserProfile;
-        setProfile(data);
-        if (data.residentialAddress) {
-          setResAddress(data.residentialAddress);
-          setResInput(fullAddress(data.residentialAddress));
-        }
-        if (data.pickupAddress) {
-          setPickupAddress(data.pickupAddress);
-          setPickupInput(fullAddress(data.pickupAddress));
-        }
+      
+      const userDocRef = doc(db, "users", authUser.uid);
+      const profileDocRef = doc(db, "profiles", authUser.uid);
+
+      const [userDocSnap, profileDocSnap] = await Promise.all([
+        getDoc(userDocRef),
+        getDoc(profileDocRef),
+      ]);
+
+      let combinedData: UserProfile = { name: '', email: authUser.email || '' };
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data() as Partial<UserProfile>;
+        combinedData = { ...combinedData, ...userData };
       }
+      
+      if (profileDocSnap.exists()) {
+        const profileData = profileDocSnap.data() as Partial<UserProfile>;
+        combinedData = { ...combinedData, ...profileData };
+      }
+
+      setProfile(combinedData);
+      
+      if (combinedData.residentialAddress) {
+        setResAddress(combinedData.residentialAddress);
+        setResInput(fullAddress(combinedData.residentialAddress));
+      }
+      if (combinedData.pickupAddress) {
+        setPickupAddress(combinedData.pickupAddress);
+        setPickupInput(fullAddress(combinedData.pickupAddress));
+      }
+      
       setFetching(false);
     };
     fetchProfile();
@@ -87,10 +105,14 @@ export default function MyProfilePage() {
       )}.json?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}&autocomplete=true&types=address&limit=5&country=ca,us`
     );
     const data = await res.json();
-    isRes ? setResSuggestions(data.features) : setPickupSuggestions(data.features);
+    if (isRes) {
+      setResSuggestions(data.features);
+    } else {
+      setPickupSuggestions(data.features);
+    }
   };
 
-  const handleSuggestionSelect = (sug: any, isRes: boolean) => {
+  const handleSuggestionSelect = (sug: { place_name: string; context: { id: string; text: string }[] }, isRes: boolean) => {
     const context = sug.context || [];
     const countryName = getFieldFromContext(context, "country") || "Canada";
     const address: Address = {
@@ -122,19 +144,25 @@ export default function MyProfilePage() {
   const saveAddresses = async () => {
     if (!authUser?.uid) return;
     setSaving(true);
-    await setDoc(
-      doc(db, "users", authUser.uid),
-      {
-        residentialAddress: resAddress,
-        pickupAddress: sameAsRes ? resAddress : pickupAddress,
-      },
-      { merge: true }
-    );
-    setSaving(false);
-    toast.success("Addresses saved!");
+    try {
+      await setDoc(
+        doc(db, "users", authUser.uid),
+        {
+          residentialAddress: resAddress,
+          pickupAddress: sameAsRes ? resAddress : pickupAddress,
+        },
+        { merge: true }
+      );
+      toast.success("Addresses saved!");
+    } catch (error) {
+      console.error("Error saving addresses:", error);
+      toast.error("Failed to save addresses.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (loading || fetching) {
+  if (loading || fetching || !profile) {
     return <p className="text-center mt-20">Loading profile...</p>;
   }
 
@@ -212,7 +240,7 @@ export default function MyProfilePage() {
 
         <button
           onClick={saveAddresses}
-          className="cursor-pointer w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
+          className="cursor-pointer t w-full bg-black text-white py-2 rounded hover:bg-gray-800 transition"
           disabled={!resAddress || (!sameAsRes && !pickupAddress) || saving}
         >
           {saving ? "Saving..." : "Save Addresses"}

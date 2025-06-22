@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Splitbuy <onboarding@resend.dev>",
+      from: "SplitBuy <onboarding@resend.dev>",
       to: [to],
       subject: "Verify your email address",
       react: VerificationEmail({ url }),
