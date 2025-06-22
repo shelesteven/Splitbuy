@@ -50,7 +50,7 @@ function SiteHeader() {
 
                         {open && (
                             <div className="absolute right-0 mt-2 w-48 border rounded-md border-gray-200 dark:border-gray-700 shadow-lg z-50">
-                                <Link href="/my-account" className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                                <Link href={`/profile/${authUser.uid}`} className="block px-4 py-2 bg-white dark:bg-black rounded-t-md hover:bg-gray-100 dark:hover:bg-gray-800">
                                     Profile
                                 </Link>
                                 <button

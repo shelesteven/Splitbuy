@@ -78,7 +78,9 @@ export default function SignUpPage() {
       uid: user.uid,
       name: name,
       createdAt: new Date().toISOString(),
-      // Public fields like display name, avatar, etc.
+      reviewRating: null,
+      reviews: [],
+      completedGroupBuys: 0,
     });
   };
 

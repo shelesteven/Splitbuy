@@ -3,29 +3,31 @@
 import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock, Users, DollarSign } from "lucide-react";
 import { ChatBox } from "@/components/chat/ChatBox";
 import { useAuth } from "@/context/AuthUserContext";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, Timestamp } from "firebase/firestore";
 import { RequirePaymentMethod } from "@/components/RequirePaymentMethod";
 import { PurchaseRequestForm } from "@/components/PurchaseRequestForm";
 import { PurchaseProofUpload } from "@/components/PaymentUpload";
 import { PurchaseApproval } from "@/components/PurchaseApproval";
 import { PaymentManagement } from "@/components/PaymentManagement";
 import { toast } from "sonner";
+import { type } from "os";
 
 interface Participant {
   userId: string;
   status: 'confirmed' | 'pending';
-  joinedAt: any;
+  joinedAt: Timestamp;
 }
 
 interface JoinRequest {
   userId: string;
-  requestedAt: any;
+  requestedAt: Timestamp;
 }
 
 interface PurchaseRequest {
@@ -35,13 +37,13 @@ interface PurchaseRequest {
   deadline: Date;
   message: string;
   status: 'awaiting_organizer_proof' | 'awaiting_participant_approval' | 'completed';
-  createdAt: any;
+  createdAt: Timestamp;
   organizerProof?: string | null;
-  organizerProofUploadedAt?: string | null;
+  organizerProofUploadedAt?: Timestamp | null;
   participants: {
     userId: string;
     status: 'awaiting_organizer_proof' | 'awaiting_approval' | 'approved' | 'rejected';
-    approvedAt?: any;
+    approvedAt?: Timestamp;
   }[];
 }
 
@@ -56,6 +58,19 @@ interface GroupBuy {
   purchaseRequest?: PurchaseRequest;
 }
 
+interface Product {
+    id: string;
+    name: string;
+    description: string;
+    imageUrl: string;
+    discountedPrice: number;
+    pricePerUnit: number;
+}
+
+interface UserProfile {
+    name: string;
+}
+
 // Fix protocol-relative URLs to absolute URLs
 const fixImageUrl = (url: string | null | undefined): string => {
   if (!url) return "/placeholder-product.svg";
@@ -68,9 +83,9 @@ const fixImageUrl = (url: string | null | undefined): string => {
 export default function GroupBuyPage() {
   const params = useParams();
   const { authUser } = useAuth();
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [groupBuy, setGroupBuy] = useState<GroupBuy | null>(null);
-  const [userProfiles, setUserProfiles] = useState<{[key: string]: any}>({});
+  const [userProfiles, setUserProfiles] = useState<{[key: string]: UserProfile}>({});
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const [showPurchaseForm, setShowPurchaseForm] = useState(false);
@@ -104,11 +119,6 @@ export default function GroupBuyPage() {
     return status === 'organizer' || status === 'participant';
   };
 
-  const getParticipantPaymentStatus = () => {
-    if (!authUser || !groupBuy?.purchaseRequest) return null;
-    return groupBuy.purchaseRequest.participants.find(p => p.userId === authUser.uid);
-  };
-
   const canSendPurchaseRequest = () => {
     const status = getUserStatus();
     return status === 'organizer' && 
@@ -127,10 +137,10 @@ export default function GroupBuyPage() {
           notFound();
         }
         
-        const productData = productDoc.data();
+        const productData = productDoc.data() as Omit<Product, 'id' | 'imageUrl'> & { image?: string };
         setProduct({
-          id: productDoc.id,
           ...productData,
+          id: productDoc.id,
           imageUrl: fixImageUrl(productData.image),
         });
 
@@ -155,9 +165,11 @@ export default function GroupBuyPage() {
           
           const profiles = await Promise.all(profilePromises);
           const profilesMap = profiles.reduce((acc, { userId, data }) => {
-            acc[userId] = data;
+            if (data) {
+                acc[userId] = data as UserProfile;
+            }
             return acc;
-          }, {} as {[key: string]: any});
+          }, {} as {[key: string]: UserProfile});
           
           setUserProfiles(profilesMap);
         }
@@ -180,7 +192,7 @@ export default function GroupBuyPage() {
       await updateDoc(doc(db, "groupBuys", groupBuyId), {
         joinRequests: arrayUnion({
           userId: authUser.uid,
-          requestedAt: new Date().toISOString(),
+          requestedAt: Timestamp.now(),
         })
       });
       
@@ -189,7 +201,7 @@ export default function GroupBuyPage() {
         ...prev,
         joinRequests: [...prev.joinRequests, {
           userId: authUser.uid,
-          requestedAt: new Date().toISOString(),
+          requestedAt: Timestamp.now(),
         }]
       } : null);
       
@@ -215,7 +227,7 @@ export default function GroupBuyPage() {
           participants: arrayUnion({
             userId: userId,
             status: "confirmed",
-            joinedAt: new Date().toISOString(),
+            joinedAt: Timestamp.now(),
           }),
           joinRequests: arrayRemove(groupBuy.joinRequests.find(r => r.userId === userId)),
           currentParticipants: newParticipantCount,
@@ -280,6 +292,13 @@ export default function GroupBuyPage() {
                 </span>
               </div>
               
+              <div className="text-sm text-muted-foreground mb-4">
+                Created by{" "}
+                <Link href={`/profile/${groupBuy.organizer}`} className="text-blue-500 hover:underline">
+                  {userProfiles[groupBuy.organizer]?.name || "Unknown User"}
+                </Link>
+              </div>
+
               {/* Group Status */}
               <div className="flex items-center gap-2 mb-3">
                 <Users className="h-4 w-4" />
@@ -320,7 +339,7 @@ export default function GroupBuyPage() {
               )}
               {userStatus === 'participant' && groupBuy?.status === 'open' && (
                 <Button size="lg" className="w-fit mb-2" disabled>
-                  You're in this group!
+                  You&apos;re in this group!
                 </Button>
               )}
               {userStatus === 'requested' && (
@@ -392,7 +411,9 @@ export default function GroupBuyPage() {
                           )}
                           <div>
                             <div className="font-medium">
-                              {userProfiles[participant.userId]?.name || "Unknown User"}
+                              <Link href={`/profile/${participant.userId}`} className="hover:underline">
+                                {userProfiles[participant.userId]?.name || "Unknown User"}
+                              </Link>
                             </div>
                             <div className="text-sm text-muted-foreground">
                               {participant.status === 'approved' ? 'Approved' : 
@@ -421,7 +442,7 @@ export default function GroupBuyPage() {
                   purchaseRequest={{
                     amount: groupBuy.purchaseRequest.amount,
                     organizerProof: groupBuy.purchaseRequest.organizerProof || '',
-                    organizerProofUploadedAt: groupBuy.purchaseRequest.organizerProofUploadedAt || ''
+                    organizerProofUploadedAt: groupBuy.purchaseRequest.organizerProofUploadedAt?.toDate().toISOString() || ''
                   }}
                   userStatus={validStatus as 'awaiting_approval' | 'approved' | 'rejected'}
                   onUpdate={() => window.location.reload()}
@@ -438,7 +459,7 @@ export default function GroupBuyPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    The organizer is preparing to purchase the items. You'll be able to review and approve the purchase proof once it's uploaded.
+                    The organizer is preparing to purchase the items. You&apos;ll be able to review and approve the purchase proof once it&apos;s uploaded.
                   </p>
                 </CardContent>
               </Card>
@@ -457,7 +478,9 @@ export default function GroupBuyPage() {
                         <div className="flex items-center gap-2">
                           <CheckCircle className="h-4 w-4 text-green-500" />
                           <span className="font-medium">
-                            {userProfiles[participant.userId]?.name || "Unknown User"}
+                            <Link href={`/profile/${participant.userId}`} className="hover:underline">
+                              {userProfiles[participant.userId]?.name || "Unknown User"}
+                            </Link>
                             {participant.userId === groupBuy.organizer && " (Organizer)"}
                           </span>
                         </div>
@@ -480,7 +503,9 @@ export default function GroupBuyPage() {
                       <li key={request.userId} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-yellow-500" />
-                          <span>{userProfiles[request.userId]?.name || "Unknown User"}</span>
+                          <Link href={`/profile/${request.userId}`} className="hover:underline">
+                            {userProfiles[request.userId]?.name || "Unknown User"}
+                          </Link>
                         </div>
                         <div className="flex gap-1">
                           <Button 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { doc, onSnapshot, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, updateDoc, arrayUnion, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthUserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 interface ChatBoxProps {
     chatId: string;
@@ -16,9 +17,21 @@ interface UserData {
     [key: string]: string;
 }
 
+interface ChatMessage {
+    senderId: string;
+    text: string;
+    timestamp: Timestamp;
+}
+
+interface Chat {
+    id: string;
+    users: string[];
+    messages: ChatMessage[];
+}
+
 export function ChatBox({ chatId }: ChatBoxProps) {
     const { authUser } = useAuth();
-    const [chat, setChat] = useState<any>(null);
+    const [chat, setChat] = useState<Chat | null>(null);
     const [newMessage, setNewMessage] = useState("");
     const [users, setUsers] = useState<UserData>({});
     const [error, setError] = useState<string | null>(null);
@@ -37,7 +50,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             const unsubscribe = onSnapshot(chatDocRef, async (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     setError(null);
-                    const chatData = docSnapshot.data();
+                    const chatData = docSnapshot.data() as Omit<Chat, 'id'>;
                     setChat({ id: docSnapshot.id, ...chatData });
 
                     if (chatData.users) {
@@ -77,7 +90,7 @@ export function ChatBox({ chatId }: ChatBoxProps) {
             messages: arrayUnion({
                 senderId: authUser.uid,
                 text: newMessage,
-                timestamp: new Date().toISOString(),
+                timestamp: Timestamp.now(),
             }),
         });
 
@@ -100,11 +113,18 @@ export function ChatBox({ chatId }: ChatBoxProps) {
         <Card className="flex flex-col h-full">
             <div className="px-4 pb-4 border-b flex-shrink-0">
                 <h2 className="text-xl font-bold">Chat</h2>
-                {chat.users && <div className="text-sm text-gray-600 mt-1">Participants: {chat.users.map((uid: string) => users[uid] || "Loading...").join(", ")}</div>}
+                {chat.users && <div className="text-sm text-gray-600 mt-1">Participants: {chat.users.map((uid: string, index: number) => (
+                    <span key={uid}>
+                        <Link href={`/profile/${uid}`} className="text-blue-500 hover:underline">
+                            {users[uid] || "Loading..."}
+                        </Link>
+                        {index < chat.users.length - 1 && ", "}
+                    </span>
+                ))}</div>}
             </div>
             <div className="flex-grow min-h-0 overflow-auto">
                 <div className="p-4">
-                    {chat.messages.map((message: any, index: number) => {
+                    {chat.messages.map((message: ChatMessage, index: number) => {
                         const isSystemMessage = message.senderId === "system";
                         const isOwnMessage = message.senderId === authUser?.uid;
                         
@@ -123,12 +143,14 @@ export function ChatBox({ chatId }: ChatBoxProps) {
                                 <div className={`p-2 rounded-lg max-w-xs ${isOwnMessage ? "bg-blue-500 text-white" : "bg-neutral-200 dark:bg-neutral-800"}`}>
                                     {!isOwnMessage && (
                                         <p className="text-sm font-semibold mb-1">
-                                            {users[message.senderId] || "Unknown User"}
+                                            <Link href={`/profile/${message.senderId}`} className="hover:underline">
+                                                {users[message.senderId] || "Unknown User"}
+                                            </Link>
                                         </p>
                                     )}
                                     <p className="break-words">{message.text}</p>
                                     <p className="text-xs opacity-70 mt-1">
-                                        {new Date(message.timestamp).toLocaleTimeString()}
+                                        {message.timestamp ? new Date(message.timestamp.toDate()).toLocaleTimeString() : ''}
                                     </p>
                                 </div>
                             </div>
