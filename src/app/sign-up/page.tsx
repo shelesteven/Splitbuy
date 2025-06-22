@@ -46,6 +46,8 @@ export default function SignUpPage() {
 
   const { authUser, loading } = useAuth();
 
+  const router = useRouter();
+
   useEffect(() => {
     if (!loading && authUser) {
       router.replace("/dashboard");
@@ -53,7 +55,6 @@ export default function SignUpPage() {
   }, [authUser, loading]);
 
   const [googleLoading, setGoogleLoading] = useState(false);
-  const router = useRouter();
 
   const saveUserToFirestore = async (user: any, name: string) => {
     const userRef = doc(db, "users", user.uid);

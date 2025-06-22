@@ -1,3 +1,6 @@
+ignoredBuiltDependencies:
+  - puppeteer
+
 onlyBuiltDependencies:
   - '@firebase/util'
   - protobufjs
