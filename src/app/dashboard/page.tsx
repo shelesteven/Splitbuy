@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthUserContext";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, DocumentData } from "firebase/firestore";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { MapPin, Search } from "lucide-react";
-import { allProducts, Product } from "@/lib/products";
+
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  coordinates: { lat: number; lng: number } | null;
+  imageUrl: string;
+  price: string;
+  discountedPrice: string;
+  distance: number;
+};
 
 type LocationFilter = {
   center: { lat: number; lng: number };
@@ -27,6 +40,7 @@ const calculateDistance = (
   coord1: { lat: number; lng: number },
   coord2: { lat: number; lng: number },
 ): number => {
+  if (!coord1 || !coord2) return Infinity;
   const R = 6371; // Earth's radius in km
   const dLat = ((coord2.lat - coord1.lat) * Math.PI) / 180;
   const dLng = ((coord2.lng - coord1.lng) * Math.PI) / 180;
@@ -40,10 +54,41 @@ const calculateDistance = (
   return R * c;
 };
 
+// Fix protocol-relative URLs to absolute URLs
+const fixImageUrl = (url: string | null | undefined): string => {
+  if (!url) return "/placeholder-product.svg";
+  
+  // If it's already a placeholder, return as is
+  if (url === "/placeholder-product.svg") return url;
+  
+  // If it's a protocol-relative URL (starts with //), convert to https://
+  if (url.startsWith("//")) {
+    return `https:${url}`;
+  }
+  
+  // If it's already an absolute URL, return as is
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  
+  // If it's a relative URL, return as is
+  return url;
+};
+
+// Anonymize the pickup address for display
+const anonymizeAddress = (address: any) => {
+  if (!address || !address.city || !address.postal_code) {
+    return "Location not available";
+  }
+  // e.g., "Waterloo, N2J"
+  return `${address.city}, ${address.postal_code.substring(0, 3)}`;
+};
+
 // Mapbox Map Component
 const MapboxMap = ({
   center,
   radius,
+  products,
   onLocationChange,
   onRadiusChange,
   onAddressChange,
@@ -51,6 +96,7 @@ const MapboxMap = ({
 }: {
   center: { lat: number; lng: number };
   radius: number;
+  products: Product[];
   onLocationChange: (coords: { lat: number; lng: number }) => void;
   onRadiusChange: (radius: number) => void;
   onAddressChange: (address: string) => void;
@@ -62,7 +108,8 @@ const MapboxMap = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const filteredProducts = allProducts.filter(p => {
+  const filteredProducts = products.filter(p => {
+    if (!p.coordinates) return false;
     const distance = calculateDistance(center, p.coordinates);
     return distance <= radius;
   });
@@ -128,7 +175,7 @@ const MapboxMap = ({
 
   // Update map center when props change
   useEffect(() => {
-    if (map.current && map.current.isStyleLoaded()) {
+    if (map.current?.isStyleLoaded()) {
       map.current.setCenter([center.lng, center.lat]);
       addMarkersAndCircle();
     } else if (map.current) {
@@ -174,7 +221,7 @@ const MapboxMap = ({
             type: "Feature",
             geometry: {
               type: "Point",
-              coordinates: [p.coordinates.lng, p.coordinates.lat],
+              coordinates: [p.coordinates!.lng, p.coordinates!.lat],
             },
             properties: {
               id: p.id,
@@ -400,6 +447,8 @@ const MapboxMap = ({
 export default function DashboardPage() {
   const router = useRouter();
   const { authUser, loading } = useAuth();
+  const [listings, setListings] = useState<DocumentData[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState<LocationFilter>({
@@ -411,6 +460,16 @@ export default function DashboardPage() {
     "granted" | "denied" | "prompt" | "loading"
   >("prompt");
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  // Fetch listings from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "listings"), (snapshot) => {
+      const listingsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+      setListings(listingsData);
+      setDataLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (!loading && !authUser) {
@@ -543,6 +602,21 @@ export default function DashboardPage() {
     }));
   };
 
+  // Convert Firestore listings to Product format
+  const allProducts: Product[] = useMemo(() => {
+    return listings.map(listing => ({
+      id: listing.id,
+      name: listing.name,
+      description: listing.description,
+      location: anonymizeAddress(listing.pickupAddress),
+      coordinates: listing.coordinates,
+      imageUrl: fixImageUrl(listing.image),
+      price: listing.pricePerUnit ? `$${listing.pricePerUnit.toFixed(2)}` : "N/A",
+      discountedPrice: listing.discountedPrice ? `$${listing.discountedPrice.toFixed(2)}` : "N/A",
+      distance: 0, // Will be calculated in filteredProducts
+    }));
+  }, [listings]);
+
   const filteredProducts = useMemo(() => {
     return allProducts
       .filter((p) => {
@@ -550,22 +624,22 @@ export default function DashboardPage() {
           p.name.toLowerCase().includes(search.toLowerCase()) ||
           p.description.toLowerCase().includes(search.toLowerCase());
 
-        const distance = calculateDistance(
+        const distance = p.coordinates ? calculateDistance(
           locationFilter.center,
           p.coordinates,
-        );
+        ) : Infinity;
         const matchesLocation = distance <= locationFilter.radius;
 
         return matchesSearch && matchesLocation;
       })
       .map((p) => ({
         ...p,
-        distance: calculateDistance(locationFilter.center, p.coordinates),
+        distance: p.coordinates ? calculateDistance(locationFilter.center, p.coordinates) : Infinity,
       }))
       .sort((a, b) => a.distance - b.distance);
-  }, [search, locationFilter]);
+  }, [search, locationFilter, allProducts]);
 
-  if (loading) {
+  if (loading || dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white bg-[#0d061f]">
         Loading...
@@ -666,6 +740,7 @@ export default function DashboardPage() {
               <MapboxMap
                 center={locationFilter.center}
                 radius={locationFilter.radius}
+                products={allProducts}
                 onLocationChange={handleLocationChange}
                 onRadiusChange={handleRadiusChange}
                 onAddressChange={handleAddressChange}
@@ -738,7 +813,7 @@ export default function DashboardPage() {
                         </span>
                       </div>
                       <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {product.distance.toFixed(1)} km away
+                        {product.coordinates ? `${product.distance.toFixed(1)} km away` : "Location unavailable"}
                       </span>
                     </div>
                   </div>

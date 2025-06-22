@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { allProducts } from "@/lib/products";
 import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,24 +17,65 @@ interface Participant {
   status: 'confirmed' | 'pending';
 }
 
+// Fix protocol-relative URLs to absolute URLs
+const fixImageUrl = (url: string | null | undefined): string => {
+  if (!url) return "/placeholder-product.svg";
+  
+  // If it's already a placeholder, return as is
+  if (url === "/placeholder-product.svg") return url;
+  
+  // If it's a protocol-relative URL (starts with //), convert to https://
+  if (url.startsWith("//")) {
+    return `https:${url}`;
+  }
+  
+  // If it's already an absolute URL, return as is
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  
+  // If it's a relative URL, return as is
+  return url;
+};
+
 export default function GroupBuyPage() {
   const params = useParams();
   const { authUser } = useAuth();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [product, setProduct] = useState<any>(null);
   const [hasPermission, setHasPermission] = useState(true);
+  const [loading, setLoading] = useState(true);
   const groupBuyId = Array.isArray(params.groupBuyId) ? params.groupBuyId[0] : params.groupBuyId;
 
   useEffect(() => {
-    const currentProduct = allProducts.find((p) => p.id === groupBuyId);
-    if (!currentProduct) {
-      notFound();
-    }
-    setProduct(currentProduct);
+    const fetchProduct = async () => {
+      if (!groupBuyId) return;
+      
+      try {
+        const productDoc = await getDoc(doc(db, "listings", groupBuyId));
+        if (!productDoc.exists()) {
+          notFound();
+        }
+        
+        const productData = productDoc.data();
+        setProduct({
+          id: productDoc.id,
+          ...productData,
+          imageUrl: fixImageUrl(productData.image), // Map the image field to imageUrl with fallback
+        });
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        notFound();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
   }, [groupBuyId]);
 
   useEffect(() => {
-    if (!authUser || !groupBuyId) return;
+    if (!authUser || !groupBuyId || !product) return;
 
     const setupChatAndParticipants = async () => {
       try {
@@ -114,13 +154,15 @@ export default function GroupBuyPage() {
       }
     };
 
-    if (product) {
-        setupChatAndParticipants();
-    }
+    setupChatAndParticipants();
   }, [authUser, groupBuyId, product]);
 
-  if (!product) {
+  if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (!product) {
+    return <div>Product not found</div>;
   }
   
   return (
@@ -141,8 +183,8 @@ export default function GroupBuyPage() {
               {product.description}
             </p>
             <div className="flex items-center gap-3 mb-3">
-                <span className="text-xl font-bold text-green-500">{product.discountedPrice}</span>
-                <span className="text-lg text-muted-foreground line-through">{product.price}</span>
+                <span className="text-xl font-bold text-green-500">${product.discountedPrice?.toFixed(2)}</span>
+                <span className="text-lg text-muted-foreground line-through">${product.pricePerUnit?.toFixed(2)}</span>
             </div>
             <Button size="lg" className="w-fit">
               {hasPermission ? 'Buy' : 'Request to Join'}

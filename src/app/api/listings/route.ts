@@ -23,6 +23,37 @@ const sanitize = (str: string) => {
   return str.replace(/<[^>]*>?/gm, "");
 };
 
+// Simple geocoding function with coordinate anonymization
+const geocodeAddress = async (address: any): Promise<{ lat: number; lng: number } | null> => {
+  if (!address?.line1) return null;
+  
+  try {
+    const addressString = `${address.line1}, ${address.city}, ${address.state} ${address.postal_code}, ${address.country}`;
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+      addressString,
+    )}.json?access_token=${mapboxToken}&limit=1`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data.features && data.features.length > 0) {
+      const [lng, lat] = data.features[0].center;
+      
+      // Anonymize coordinates by rounding to reduce precision
+      // Rounding to 2 decimal places = ~1km precision
+      // Rounding to 3 decimal places = ~100m precision
+      const anonymizedLat = Math.round(lat * 100) / 100; // ~1km precision
+      const anonymizedLng = Math.round(lng * 100) / 100; // ~1km precision
+      
+      return { lat: anonymizedLat, lng: anonymizedLng };
+    }
+  } catch (error) {
+    console.error("Geocoding failed:", error);
+  }
+  return null;
+};
+
 export async function POST(request: Request) {
   try {
     const { token, name, numberOfPeople, userId } = await request.json();
@@ -59,6 +90,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Product name cannot be empty." }, { status: 400 });
     }
 
+    // Get user's pickup address and geocode it
+    const userDoc = await db.collection("users").doc(userId).get();
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: "User profile not found." }, { status: 404 });
+    }
+
+    const userData = userDoc.data()!;
+    const pickupAddress = userData.pickupAddress;
+
+    if (!pickupAddress?.line1) {
+      return NextResponse.json({ error: "User is missing a pickup address." }, { status: 400 });
+    }
+
+    // Geocode the address to get coordinates
+    const coordinates = await geocodeAddress(pickupAddress);
+
     // Combine secure data with user-editable fields
     const finalListingData = {
       ...listingData,
@@ -66,6 +113,7 @@ export async function POST(request: Request) {
       numberOfPeople,
       createdBy: userId,
       createdAt: FieldValue.serverTimestamp(),
+      coordinates,
     };
 
     // 1. Create a new document in the 'listings' collection

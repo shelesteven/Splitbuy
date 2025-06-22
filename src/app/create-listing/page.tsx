@@ -20,6 +20,27 @@ import Image from "next/image";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Fix protocol-relative URLs to absolute URLs
+const fixImageUrl = (url: string | null | undefined): string => {
+  if (!url) return "/placeholder-product.svg";
+  
+  // If it's already a placeholder, return as is
+  if (url === "/placeholder-product.svg") return url;
+  
+  // If it's a protocol-relative URL (starts with //), convert to https://
+  if (url.startsWith("//")) {
+    return `https:${url}`;
+  }
+  
+  // If it's already an absolute URL, return as is
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  
+  // If it's a relative URL, return as is
+  return url;
+};
+
 export type ListingData = {
   name: string;
   category: string;
@@ -220,7 +241,7 @@ export default function CreateListingPage() {
                 {listingData.image && (
                   <div className="flex justify-center mb-8 h-80">
                     <Image
-                      src={listingData.image}
+                      src={fixImageUrl(listingData.image)}
                       alt={listingData.name || "Product image"}
                       width={400}
                       height={400}
