@@ -77,24 +77,13 @@ To get a local copy up and running, follow these simple steps.
     Create a file named `.env.local` in the root of your project and add the following, replacing the placeholder values with your own credentials.
 
     ```env
-    # Firebase Service Account Key (get this from your Firebase project settings)
-    # The entire JSON key should be on a single line.
-    FIREBASE_SERVICE_ACCOUNT_KEY='{"type": "service_account", "project_id": "...", "private_key_id": "...", "private_key": "...", "client_email": "...", "client_id": "...", "auth_uri": "...", "token_uri": "...", "auth_provider_x509_cert_url": "...", "client_x509_cert_url": "..."}'
-
-    # Groq API Key for web scraping
-    GROQ_API_KEY='gsk_...'
-
-    # Your public Mapbox Access Token
-    NEXT_PUBLIC_MAPBOX_TOKEN='pk.your_mapbox_token_here'
-
-    # Your public Firebase client configuration (get this from your Firebase project settings)
-    NEXT_PUBLIC_FIREBASE_API_KEY="AIza..."
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
-    NEXT_PUBLIC_FIREBASE_APP_ID="1:..."
-    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-..." # Optional, for Google Analytics
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=...
+    NEXT_PUBLIC_FIREBASE_PUBLIC_API_KEY=...
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=...
+    NEXT_PUBLIC_MAPBOX_TOKEN=...
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=...
+    NEXT_PRIVATE_GROQ_TOKEN=...
+    IREBASE_SERVICE_ACCOUNT_KEY=...
     ```
 
 ### Usage
