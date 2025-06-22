@@ -3,17 +3,29 @@
 import { createContext, useContext } from "react";
 import useFirebaseAuth from "../lib/useFirebaseAuth";
 
-// Add signOut to context type
-const authUserContext = createContext({
+type AuthUser = {
+  uid: string;
+  email: string;
+};
+
+type AuthContextType = {
+  authUser: AuthUser | null;
+  loading: boolean;
+  signOut: () => Promise<void>;
+};
+
+const AuthUserContext = createContext<AuthContextType>({
   authUser: null,
   loading: true,
-  signOut: () => {},
+  signOut: async () => {},
 });
 
 export function AuthUserProvider({ children }: { children: React.ReactNode }) {
   const auth = useFirebaseAuth();
-  return <authUserContext.Provider value={auth}>{children}</authUserContext.Provider>;
+  return (
+    <AuthUserContext.Provider value={auth}>{children}</AuthUserContext.Provider>
+  );
 }
 
-export const useAuth = () => useContext(authUserContext);
+export const useAuth = () => useContext(AuthUserContext);
 

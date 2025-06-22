@@ -214,7 +214,6 @@ const MapboxMap = ({
   }, []);
 
   // Update map center when props change
-
   useEffect(() => {
     if (map.current && map.current.isStyleLoaded()) {
       map.current.setCenter([center.lng, center.lat]);
