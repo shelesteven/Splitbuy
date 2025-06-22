@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthUserProvider, useAuth } from "@/context/AuthUserContext";
+import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <body className="min-h-screen flex flex-col font-sans antialiased overflow-y-scroll">
                 <AuthUserProvider>
                     <ThemeProvider attribute="class" enableSystem>
+                        <VerifyEmailBanner />
                         <SiteHeader />
                         <main className="grow flex flex-col h-full overflow-auto">{children}</main>
                         <Toaster theme="system" />

@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  sendEmailVerification as firebaseSendEmailVerification,
+  User,
+} from "firebase/auth";
 import { auth, provider, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { toast } from "sonner";
@@ -56,7 +61,7 @@ export default function SignUpPage() {
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const saveUserToFirestore = async (user: any, name: string) => {
+  const saveUserToFirestore = async (user: User, name: string) => {
     // Private user data (sensitive information)
     const userRef = doc(db, "users", user.uid);
     await setDoc(userRef, {
@@ -88,14 +93,20 @@ export default function SignUpPage() {
       );
       const user = userCredential.user;
 
+      await firebaseSendEmailVerification(user);
+
       await saveUserToFirestore(user, username);
 
       console.log("Email sign-up successful:", user.email);
-      toast.success("Successfully signed up!");
+      toast.success(
+        "Successfully signed up! Please check your email to verify your account.",
+      );
       router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Sign-up error:", error);
-      toast.error("Sign-up failed: " + error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Sign-up error:", error);
+        toast.error("Sign-up failed: " + error.message);
+      }
     }
   };
 
@@ -111,10 +122,12 @@ export default function SignUpPage() {
       console.log("Google sign-in successful:", user.email);
       toast.success("Successfully signed up!");
       router.push("/dashboard");
-    } catch (error: any) {
-      if (error.code !== "auth/cancelled-popup-request") {
-        console.error("Google Sign-In error:", error);
-        toast.error("Sign-in failed. See console for details.");
+    } catch (error) {
+      if (error instanceof Error) {
+        if ((error as { code?: string }).code !== "auth/cancelled-popup-request") {
+          console.error("Google Sign-In error:", error);
+          toast.error("Sign-in failed. See console for details.");
+        }
       }
     } finally {
       setGoogleLoading(false);
