@@ -1,33 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SplitBuy - Collective Buying, Simplified
+
+[![Next.js](https://img.shields.io/badge/Next.js-14.x-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-10.x-orange?style=for-the-badge&logo=firebase)](https://firebase.google.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+
+SplitBuy is a full-stack web application designed to help people team up and take advantage of bulk-purchase discounts. It streamlines the entire group buying process, from creating a listing to secure payments and post-purchase reviews.
+
+![SplitBuy Screenshot](https://i.imgur.com/example.png) 
+*Note: Replace the link above with a real screenshot of your application.*
+
+---
+
+## About The Project
+
+In a world of rising costs, everyone loves a good deal. SplitBuy was built to bridge the gap between individual shoppers and the significant discounts offered for bulk purchases. It's a community-driven marketplace where users can initiate, join, and manage group buys in a simple, transparent, and secure environment.
+
+### Key Features
+
+*   **URL-Based Listing Creation:** Automatically scrape product details (name, price, image) from any e-commerce URL to create a new group buy listing.
+*   **Group Management:** Organizers can approve or deny requests from users who want to join their group buy.
+*   **Secure Payment Flow:** A multi-step process ensures participants pay before the organizer makes the purchase.
+    *   Participants pay directly through the platform (simulated).
+    *   The organizer uploads proof of purchase for verification.
+    *   Participants approve the proof to complete the transaction.
+*   **Real-Time Chat:** Every group buy includes a dedicated chat room for participants to communicate and coordinate.
+*   **User Profiles & Reviews:** After a successful purchase, participants can leave a 5-star rating and a review for the organizer, building a system of trust and accountability.
+*   **Address Management & Geocoding:** Users can save residential and pickup addresses. We use the Mapbox API to anonymize coordinates, protecting user privacy while facilitating local pickups.
+
+---
+
+## Built With
+
+This project leverages a modern, full-stack tech stack for a responsive and robust user experience.
+
+*   **Framework:** [Next.js](https://nextjs.org/) (with App Router)
+*   **Language:** [TypeScript](https://www.typescriptlang.org/)
+*   **Backend & Database:** [Firebase](https://firebase.google.com/) (Firestore, Firebase Authentication)
+*   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+*   **UI Components:** [Shadcn/UI](https://ui.shadcn.com/)
+*   **APIs:** [Mapbox API](https://www.mapbox.com/) for geocoding
+
+---
 
 ## Getting Started
 
-First, run the development server:
+To get a local copy up and running, follow these simple steps.
 
-```bash
+### Prerequisites
+
+*   Node.js (v18 or later)
+*   npm or pnpm
+*   A Firebase project with Firestore and Authentication enabled.
+*   A Mapbox account to obtain an access token.
+
+### Installation
+
+1.  **Clone the repo:**
+    ```sh
+    git clone https://github.com/your-username/splitbuy.git
+    cd splitbuy
+    ```
+
+2.  **Install NPM packages:**
+    ```sh
+    npm install
+    # or
+    pnpm install
+    ```
+
+3.  **Set up environment variables:**
+
+    Create a file named `.env.local` in the root of your project and add the following, replacing the placeholder values with your own credentials.
+
+    ```env
+    # Firebase Service Account Key (get this from your Firebase project settings)
+    # This should be a JSON object on a single line
+    FIREBASE_SERVICE_ACCOUNT_KEY='{"type": "service_account", "project_id": "...", ...}'
+
+    # Your public Mapbox Access Token
+    NEXT_PUBLIC_MAPBOX_TOKEN='pk.your_mapbox_token_here'
+
+    # Your public Firebase client configuration (get this from your Firebase project settings)
+    NEXT_PUBLIC_FIREBASE_API_KEY="AIza..."
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-project.appspot.com"
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="..."
+    NEXT_PUBLIC_FIREBASE_APP_ID="1:..."
+    ```
+
+### Usage
+
+Run the development server:
+
+```sh
+npm run dev
+# or
 pnpm dev
 ```
 
-Install PNPM or else.
-https://pnpm.io/
-
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contributing
 
-## Learn More
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-To learn more about Next.js, take a look at the following resources:
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
+Distributed under the MIT License. See `LICENSE` for more information.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contact
+
+Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
+
+Project Link: [https://github.com/your-username/splitbuy](https://github.com/your-username/splitbuy)
