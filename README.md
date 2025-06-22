@@ -7,9 +7,6 @@
 
 SplitBuy is a full-stack web application designed to help people team up and take advantage of bulk-purchase discounts. It streamlines the entire group buying process, from creating a listing to secure payments and post-purchase reviews.
 
-![SplitBuy Screenshot](https://i.imgur.com/example.png) 
-*Note: Replace the link above with a real screenshot of your application.*
-
 ---
 
 ## About The Project
@@ -56,6 +53,7 @@ To get a local copy up and running, follow these simple steps.
 *   npm or pnpm
 *   A Firebase project with Firestore and Authentication enabled.
 *   A Mapbox account to obtain an access token.
+*   A Groq account
 
 ### Installation
 
@@ -99,23 +97,3 @@ pnpm dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ---
-
-## Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-
----
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## Contact
-
-Your Name - [@your_twitter](https://twitter.com/your_twitter) - email@example.com
-
-Project Link: [https://github.com/your-username/splitbuy](https://github.com/your-username/splitbuy)
