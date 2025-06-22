@@ -39,9 +39,11 @@ const auth = getAuth(app);
 
 export default function CreditCardPage() {
   return (
-    <Elements stripe={stripePromise}>
-      <CreditCardForm />
-    </Elements>
+    <div className="light bg-white min-h-screen">
+      <Elements stripe={stripePromise}>
+        <CreditCardForm />
+      </Elements>
+    </div>
   );
 }
 
@@ -138,15 +140,15 @@ function CreditCardForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h2 className="text-3xl font-bold mb-6">Add Credit Card</h2>
+    <div className="max-w-md mx-auto p-6 text-gray-900">
+      <h2 className="text-3xl font-bold mb-6 text-gray-900">Add Credit Card</h2>
       <form onSubmit={handleSubmit} className="space-y-4 relative">
         <input
           type="text"
           value={billingName}
           onChange={(e) => setBillingName(e.target.value)}
           placeholder="Billing Name"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500"
           required
         />
         <input
@@ -154,7 +156,7 @@ function CreditCardForm() {
           value={billingEmail}
           onChange={(e) => setBillingEmail(e.target.value)}
           placeholder="Billing Email"
-          className="w-full p-2 border border-gray-300 rounded"
+          className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500"
           required
         />
 
@@ -168,15 +170,15 @@ function CreditCardForm() {
               fetchSuggestions(e.target.value);
             }}
             placeholder="Start typing your address..."
-            className="w-full p-2 border border-gray-300 rounded"
+            className="w-full p-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-500"
             required
           />
           {suggestions.length > 0 && (
-            <ul className="absolute z-10 bg-white border rounded shadow w-full mt-1 max-h-48 overflow-y-auto">
+            <ul className="absolute z-10 bg-white border border-gray-300 rounded shadow w-full mt-1 max-h-48 overflow-y-auto">
               {suggestions.map((sug, idx) => (
                 <li
                   key={idx}
-                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  className="p-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
                   onClick={() => {
                     setSelectedPlace(sug);
                     setAddressInput(sug.place_name);
@@ -190,7 +192,7 @@ function CreditCardForm() {
           )}
         </div>
 
-        <CardElement className="p-3 border border-gray-300 rounded" />
+        <CardElement className="p-3 border border-gray-300 rounded bg-white" />
 
         <button
           type="submit"
